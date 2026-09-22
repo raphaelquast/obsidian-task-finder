@@ -1,0 +1,127 @@
+
+.task_view_modal {
+  pointer-events:none;
+  margin: -2em;
+}
+.task_view_modal_suffix {
+	font-size:75%;
+	filter: brightness(70%);
+} 
+
+.task_view_modal_date{
+	position:relative; /* to respect z-index*/
+	font-size:90%;
+	float: right;
+	filter: brightness(75%);
+	text-align:right;
+	z-index:2;
+	padding-top:5px;
+	padding-right:5px
+}
+
+.task_view_modal_date[data-is-before="true"][data-checked="false"]{
+	color: var(--text-warning);
+}
+.task_view_modal_date:before{
+	font-size:70%;
+	content: attr(data-datesource);
+	margin-right:0.25em;
+}
+
+.task_suggestion_container {
+	margin-bottom:-15px;
+	margin-left:15px;
+}
+
+.task_suggestion_task_container {
+	transition: .1s;
+	padding:2px 5px 2px 5px;
+	border-radius:5px;
+}
+
+.task_suggestion_task_container:hover {
+	  background: var(--background-modifier-hover);
+}
+
+
+.task_suggestion_header {
+	display:flex;
+	flex-wrap:wrap;
+	align-items: center;
+}
+
+.task_suggestion_header_left {
+	font-weight:bold;
+	font-size:120%;
+	padding-bottom:5px;
+    align-items: center;
+	width: max-content;
+	margin-right:15px
+}
+.task_suggestion_header_right {
+	font-weight:bold;
+	font-size:120%;
+	padding-bottom:5px;
+    align-items: center;
+	width: max-content;	
+	margin-left:15px
+}
+.task_suggestion_header_center {
+	flex: 1 0 auto;
+	border-top: solid 1px var(--text-muted);
+	align-items: center;
+}
+
+.tasks_of_today {
+	border: 1px dashed var(--text-muted);
+}
+
+.suggestion-item.is-selected {
+	padding:8px 12px!important;
+	padding-bottom:8px!important;
+	background: transparent!important;*/
+
+}
+
+.task_finder_footnote_tag_container {
+	display:inline-block;
+	padding-left:10px;
+}
+
+.task_finder_additional_text_container {
+	font-size:75%;
+	padding-bottom:5px;
+	padding-left:8ch;
+	white-space:normal;
+	max-width:90%
+}
+
+
+
+/*SETTINGS*/
+.task_finder_settings_query_container {
+	margin-left:15px;
+}
+.task_finder_settings_query_item {
+	margin-left:15px;
+	border-bottom:1px solid var(--background-modifier-border);
+	color: var(--text-muted);
+	font-size:var(--font-ui-smallest);
+	padding-bottom:5px;
+	padding-top:5px;
+
+
+}
+
+.task_finder_settings_query_str {
+	font-weight:bold;
+	display:inline-block;
+	vertical-align:top;
+	width:min-content;
+	min-width:8em;
+}
+
+.task_finder_settings_query_desc {
+	display:inline-block;
+	max-width:calc(100% - 8em);
+}

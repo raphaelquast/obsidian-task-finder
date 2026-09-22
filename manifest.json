@@ -1,0 +1,10 @@
+{
+	"id": "task finder",
+	"name": "Task Finder",
+	"version": "0.1.0",
+	"minAppVersion": "0.15.0",
+	"description": "Find your tasks!",
+	"author": "raphaelquast",
+	"authorUrl": "https://github.com/raphaelquast",
+	"isDesktopOnly": false
+}
