@@ -3,6 +3,10 @@
 A plugin to help you find tasks inside your vault.
 (on Desktop and Mobile)
 
+
+> [!CAUTION]
+> This is still a work-in-progress!
+
 <img src="./images/basic_query.png" width=50%>
 
 
