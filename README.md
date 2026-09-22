@@ -8,11 +8,14 @@ A plugin to help you find tasks inside your vault.
 
 ## What do I get with this plugin?
 
-- A command: `Task Finder: Find Tasks` to query all tasks in your vault based on date, tags and task-text.
+A command: `Task Finder: Find Tasks` to query all tasks in your vault based on date, tags and task-text and display them in a popup.
+- Clicking on a task-text will open the defining note.
+- Checking the checkmark will also update the task in the defining note.
+ 
 
 ## Query Language
 ### Filter Dates
-Examples:
+Examples:  
 -`+-2w`: Show all tasks scheduled between 2 weeks before and after today.
 - `+`: Show all future tasks.
 
