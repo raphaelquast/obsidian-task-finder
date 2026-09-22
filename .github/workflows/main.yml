@@ -1,0 +1,36 @@
+name: Create Attestations
+
+on:
+    push:
+        tags:
+            - "*"
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: write
+            id-token: write
+            attestations: write
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+            
+            - name: Generate main.js attestation
+              uses: actions/attest@v4
+              with:
+                  subject-path: |
+                      main.js
+                      manifest.json
+                      styles.css
+            
+            - name: GH Release
+              uses: softprops/action-gh-release@v3.0.0  
+              with:
+                  files: |
+                      main.js
+                      manifest.json
+                      styles.css
+                  generate_release_notes: true
