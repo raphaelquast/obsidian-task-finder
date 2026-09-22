@@ -20,12 +20,14 @@ Examples:
 - `+`: Show all future tasks.
 
 Set anchor-date `@...`
+
     - `@yyyymmdd` for specific day
     - `@mmdd` for month/day in current year
     - `@dd` for day in current month
     - `@` for today (default)
  
 Set date-range: `(direction)(duration)(unit)`
+
 - direction:
     - `+` for all days after 'anchor-date'
     - `-` for all days before 'anchor-date
