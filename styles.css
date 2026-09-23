@@ -6,7 +6,7 @@
 .task_view_modal_suffix {
 	font-size:75%;
 	filter: brightness(70%);
-} 
+}
 
 .task_view_modal_date{
 	position:relative; /* to respect z-index*/
@@ -63,7 +63,7 @@
 	font-size:120%;
 	padding-bottom:5px;
     align-items: center;
-	width: max-content;	
+	width: max-content;
 	margin-left:15px
 }
 .task_suggestion_header_center {
@@ -109,8 +109,14 @@
 	font-size:var(--font-ui-smallest);
 	padding-bottom:5px;
 	padding-top:5px;
+}
 
-
+.task_finder_settings_query_header {
+	padding-top:10px;
+	font-size:var(--font-ui-small);
+	font-weight:bold;
+	color: var(--text-muted);
+	text-decoration: underline;
 }
 
 .task_finder_settings_query_str {
@@ -125,3 +131,68 @@
 	display:inline-block;
 	max-width:calc(100% - 8em);
 }
+
+.task_finder_modal_header {
+	border-top: 1px solid var(--text-muted);
+	position:inline-block;
+	font-size:var(--font-ui-smallest);
+	padding:2px;
+	display:flex;
+	flex-direction:row;
+	flex-wrap: wrap;
+	align-items: center;
+    justify-content: center;
+
+}
+
+[id^=task_finder_header_] {
+	background: var(--background-modifier-hover);
+	border:1px solid var(--background-modifier-active-hover);
+	padding-left:1ch;
+	padding-right:1ch;
+	margin:5px;
+	border-radius:3px;
+	text-align: center;
+	width: max-content;
+	color:var(--text-muted)
+	}
+
+[id^=task_finder_header_]:empty {
+	display:none;
+}
+
+/*
+#task_finder_header_date_range {
+	padding-right:1ch;
+	margin-left:5px;
+	background:var(--background-modifier-active-hover);
+	border-radius:3px;
+}
+
+#task_finder_header_ntasks {
+	float:right;
+	padding-right:10px;
+}
+
+#task_finder_header_comment {
+	display:inline-block;
+}
+
+#task_finder_header_comment_tags:not(:empty) {
+	padding-right:1ch;
+	padding-left:1ch;
+	border-left:1px solid var(--text-muted);
+}
+
+#task_finder_header_comment_statuses:not(:empty) {
+	padding-right:1ch;
+	padding-left:1ch;
+	border-left:1px solid var(--text-muted);
+}
+
+#task_finder_header_comment_unchecked:not(:empty) {
+	padding-right:1ch;
+	padding-left:1ch;
+	border-left:1px solid var(--text-muted);
+}
+*/
