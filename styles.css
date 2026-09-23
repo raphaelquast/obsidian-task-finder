@@ -133,7 +133,7 @@
 }
 
 .task_finder_modal_header {
-	border-top: 1px solid var(--text-muted);
+	border-top: 1px solid var(--background-modifier-active-hover);
 	position:inline-block;
 	font-size:var(--font-ui-smallest);
 	padding:2px;
