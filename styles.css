@@ -161,38 +161,6 @@
 	display:none;
 }
 
-/*
-#task_finder_header_date_range {
-	padding-right:1ch;
-	margin-left:5px;
-	background:var(--background-modifier-active-hover);
-	border-radius:3px;
+.task_finder_setting_add_folder {
+	background-color:var(--background-primary);
 }
-
-#task_finder_header_ntasks {
-	float:right;
-	padding-right:10px;
-}
-
-#task_finder_header_comment {
-	display:inline-block;
-}
-
-#task_finder_header_comment_tags:not(:empty) {
-	padding-right:1ch;
-	padding-left:1ch;
-	border-left:1px solid var(--text-muted);
-}
-
-#task_finder_header_comment_statuses:not(:empty) {
-	padding-right:1ch;
-	padding-left:1ch;
-	border-left:1px solid var(--text-muted);
-}
-
-#task_finder_header_comment_unchecked:not(:empty) {
-	padding-right:1ch;
-	padding-left:1ch;
-	border-left:1px solid var(--text-muted);
-}
-*/

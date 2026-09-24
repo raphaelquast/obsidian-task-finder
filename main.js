@@ -8,13 +8,6 @@ moment.locale('de')
 let defaultQueryFiles = {
 	}
 
-// default queries set if file is part of folder
-let defaultQueryFolders = {
-	"GeoSphere/Projects/CGLOPS/": "@u #CGLOPS ",
-	"GeoSphere/Projects/HSAF/": "@u #HSAF ",
-	"GeoSphere/Projects/GeoSphere/": "@u #GeoSphere ",
-}
-
 const DEFAULT_SETTINGS = {
 	"defaultQuery": "@u +-2w #* ",
 	"queryDebounceTime": 100,
@@ -22,14 +15,18 @@ const DEFAULT_SETTINGS = {
 	"excludedFolders": [],
 	"excludedFoldersRegex": [],
 	"includeStatus":"unchecked",
+	"folderQueries":[],
+	"showCacheRefreshMessage": true,
+	"groupTasks":"date",
 }
+
 
 class FolderSuggest extends obsidian.AbstractInputSuggest {
 	constructor(plugin, inputEl) {
 	super(plugin.app, inputEl)
 	this.plugin = plugin
 	this.inputEl = inputEl
-	this.content = app.vault.getAllFolders().map((t)=>t.path)
+	this.content = plugin.app.vault.getAllFolders().map((t)=>t.path)
 }
 
 	getSuggestions(query) {
@@ -54,6 +51,43 @@ class FolderSuggest extends obsidian.AbstractInputSuggest {
 	}
 
 	async selectSuggestion(content, evt) {
+	}
+}
+
+class QueryFolderSuggest extends FolderSuggest {
+	constructor(plugin, inputEl) {
+	super(plugin, inputEl)
+	this.content = this.plugin.allFolders
+	}
+
+	getSuggestions(query) {
+		const words = query.split(" ")
+		let word = words.at(-1)
+	if (word){
+		word = word.startsWith("$")?word.slice(1):word
+		word = word.startsWith("~$")?word.slice(2):word
+		return super.getSuggestions(word)
+	}
+	}
+
+	renderSuggestion(content, el) {
+		el.setText(content)
+	}
+
+	async selectSuggestion(content, evt) {
+		let query = this.inputEl.value
+		const words = query.split(" ")
+		const word = words.at(-1)
+		if (word && (word.startsWith("$") | word.startsWith("~$"))) {
+			this.inputEl.value = words.slice(0, -1).join(" ") + ` $${content} `
+			this.inputEl.dispatchEvent(new Event('input', { 'bubbles': true }));
+		}
+		this.close()
+	}
+}
+
+class SettingsFolderSuggest extends FolderSuggest {
+	async selectSuggestion(content, evt) {
 		//this.inputEl.value = content
 		this.plugin.settings.excludedFolders.push(content)
 		await this.plugin.saveSettings();
@@ -61,6 +95,107 @@ class FolderSuggest extends obsidian.AbstractInputSuggest {
 		this.close()
 	}
 }
+
+class SettingsFolderQuerySuggest extends SettingsFolderSuggest {
+	async selectSuggestion(content, evt) {
+		this.plugin.settings.folderQueries.push([content, this.plugin.settings.folder_query.getValue()])
+		await this.plugin.saveSettings();
+		this.plugin.settingTab.update();
+		this.close()
+	}
+}
+
+
+
+const task_statuses = [
+	{status: ' ' , label:'to-do'},
+	{status: '/' , label:'incomplete'},
+	{status: '>' , label:'forwarded'},
+	{status: '<' , label:'scheduling'},
+	{status: '?' , label:'question'},
+	{status: '!' , label:'important'},
+	{status: '*' , label:'star'},
+	{status: '"' , label:'quote'},
+	{status: 'l' , label:'location'},
+	{status: 'b' , label:'bookmark'},
+	{status: 'i' , label:'information'},
+	{status: 'S' , label:'savings'},
+	{status: 'I' , label:'idea'},
+	{status: 'p' , label:'pros'},
+	{status: 'c' , label:'cons'},
+	{status: 'f' , label:'fire'},
+	{status: 'k' , label:'key'},
+	{status: 'w' , label:'win'},
+	{status: 'u' , label:'up'},
+	{status: 'd' , label:'down'},
+	{status: 'n' , label:'needle'},
+	{status: 'r' , label:'right'},
+	{status: 't' , label:'time'},
+	{status: 'x' , label:'done'},
+	{status: '-' , label:'canceled'},
+];
+
+class StatusSuggest extends obsidian.AbstractInputSuggest {
+	constructor(plugin, inputEl) {
+	super(plugin.app, inputEl)
+	this.plugin = plugin
+	this.inputEl = inputEl
+	this.content = task_statuses.map((s)=> s.status)
+}
+
+	getSuggestions(query) {
+		const words = query.split(" ")
+		if (words && (words.at(-1).startsWith("?") | words.at(-1).startsWith("~?"))) { return this.content } else { this.close() }
+	}
+
+	renderSuggestion(content, el) {
+		const c = el.createEl('input',
+			{cls:'task-list-item-checkbox',
+			 type: 'checkbox',
+			 attr: {checked:true, 'data-task':content}});
+		if (content == " ") {c.checked = false}
+	}
+
+	async selectSuggestion(content, evt) {
+		this.inputEl.value += (content==" ")?"~":content;
+		this.inputEl.dispatchEvent(new Event('input', { 'bubbles': true }));
+		}
+}
+
+
+class TagSuggest extends obsidian.AbstractInputSuggest {
+	constructor(plugin, inputEl) {
+	super(plugin.app, inputEl)
+	this.plugin = plugin
+	this.inputEl = inputEl
+	this.content = this.plugin.allTags
+}
+
+	getSuggestions(query) {
+		const words = query.split(" ")
+		if (words && words.at(-1).startsWith("#")) {
+			return this.content.filter((t) => t.toLowerCase().includes(words.at(-1).toLowerCase().slice(1)))
+		} else { this.close() }
+	}
+
+	renderSuggestion(content, el) {
+		el.createEl('a', {cls:'tag colored-tag-task', text:content, attr:{href:content}});
+	}
+
+	async selectSuggestion(content, evt) {
+		let query = this.inputEl.value
+		const words = query.split(" ")
+		const word = words.at(-1)
+		if (word && word.startsWith("#")) {
+			this.inputEl.value = words.slice(0, -1).join(" ") + ` ${content} `
+			this.inputEl.dispatchEvent(new Event('input', { 'bubbles': true }));
+		}
+		this.close()
+	}
+}
+
+
+
 
 class SettingTab extends obsidian.PluginSettingTab {
 	constructor(app, plugin) {
@@ -88,37 +223,50 @@ class SettingTab extends obsidian.PluginSettingTab {
 			options: { 'unchecked': 'Only unchecked tasks', 'checked': 'Only checked tasks', 'all': 'All tasks' },
 		  },
 		},
+		{
+		  name: 'Grouping',
+		  desc: 'Set property that is used to group the tasks.',
+		  control: {
+			type: 'dropdown',
+			key: 'groupTasks',
+			defaultValue: DEFAULT_SETTINGS.groupTasks,
+			options: { 'date': 'Task Date', 'filename': 'File Name' },
+		  },
+		},
 		{name: 'Default Query', desc: 'The default query to use.',
 		 control: { type: 'text', key: 'defaultQuery', placeholder: 'Enter default query'} },
 	    {name: 'Test', render: (setting) => {
 			let containerEl = setting.infoEl
 			let e
 			containerEl.empty();
-			const d = containerEl.createEl("div", {cls:"task_finder_settings_query_container"});
+			const d = containerEl.createEl("div", {cls:"task_finder_settings_query_container", text:"Query Language:"});
 
 			d.createEl("div", {cls:"task_finder_settings_query_header", text:"Set anchor date:"});
 			this.addQueryStrdesc(d, "@YYYYMMDD", "Set 'anchor-date' (default: today).")
 			this.addQueryStrdesc(d, "@MMDD", "Set 'anchor-date' to month/day of current year.")
 			this.addQueryStrdesc(d, "@DD", "Set 'anchor-date' to day of current month.")
+			d.createEl("div", {cls:"task_finder_settings_query_header", text:"Include unscheduled tasks:"});
+			this.addQueryStrdesc(d, "@u", "Include 'unscheduled' tasks when querying a time-period.")
 
 			d.createEl("div", {cls:"task_finder_settings_query_header", text:"Query date ranges:"});
+			e = this.addQueryStrdesc(d, "+", "Show all future tasks.")
+			e = this.addQueryStrdesc(d, "-", "Show all tasks from the past.")
 			e = this.addQueryStrdesc(d, "+-5d", "Limit tasks to a time-period relative to the 'anchor-date'.")
 			e.createEl("div", {text:"+ future | - past | +- future&past"})
 			e.createEl("div", {text:"d:days (default), w:weeks, m:months, y:years"})
 
-			d.createEl("div", {cls:"task_finder_settings_query_header", text:"Include unscheduled tasks:"});
-			this.addQueryStrdesc(d, "@u", "Include 'unscheduled' tasks when querying a time-period.")
 
 			d.createEl("div", {cls:"task_finder_settings_query_header", text:"Query file- and inline-tags:"});
 			this.addQueryStrdesc(d, "#", "Include only tasks with inline- or file-tags.")
 			this.addQueryStrdesc(d, "#*", "Include only tasks with inline-tags.")
-			this.addQueryStrdesc(d, "#tag", "Search for tasks with the given inline- or file-tag.")
+			this.addQueryStrdesc(d, "#tag", "Include only tasks with the mentioned inline- or file-tags.")
+			this.addQueryStrdesc(d, "~#tag", "Exclude tasks with the mentioned inline- or file-tag.")
 
 			d.createEl("div", {cls:"task_finder_settings_query_header", text:"Query task-statuses:"});
-			this.addQueryStrdesc(d, "", "")
-			this.addQueryStrdesc(d, "?", "Include only unchecked tags.")
-			e = this.addQueryStrdesc(d, "?...", "Include only specific tag-statuses")
-			e.createEl("div", {text:"( e.g. ?!fl will include task-statuses [!], [f] and [l] )"})
+			e = this.addQueryStrdesc(d, "?...", "Include only tasks with the mentioned tag-statuses.")
+			e.createEl("div", {text:"( For empty task-status use ~ )"})
+			e.createEl("div", {text:"(For example: ?!fl~ will include task-statuses [!], [f], [l] and [ ]. )"})
+			e = this.addQueryStrdesc(d, "~?...", "Exclude tasks with the mentioned tag-statuses.")
 
 		}},
 		{
@@ -148,16 +296,16 @@ class SettingTab extends obsidian.PluginSettingTab {
 	},
 	{
 	render: (setting) => {
-		let containerEl = setting.infoEl  // controlEl
+		setting.settingEl.className = "task_finder_setting_add_folder"
+		let containerEl = setting.infoEl
 		containerEl.empty();
 		new obsidian.Setting(containerEl)
 		.setName("Add excluded folder")
 		.setDesc("Use 'regex:<pattern>' to define a RegEx pattern.")
 		.addSearch((search) => {
-			search.setValue(this.plugin.settings.icon)
-				.setPlaceholder('Add Folder or RegEx')
+			search.setPlaceholder('Add Folder or RegEx')
 
-			 function getOnKeypress (plugin) { return async (e) => {
+			function getOnKeypress (plugin) { return async (e) => {
 				if (e.key === 'Enter') {
 					plugin.settings.excludedFolders.push(search.inputEl.value);
 					await plugin.saveSettings();
@@ -167,13 +315,55 @@ class SettingTab extends obsidian.PluginSettingTab {
 			}
 
 			search.inputEl.addEventListener('keypress', getOnKeypress(this.plugin))
-			new FolderSuggest(this.plugin, search.inputEl);
+			new SettingsFolderSuggest(this.plugin, search.inputEl);
+			})
+	}},
+
+	{
+	type: 'list',
+	heading: 'Folder Queries',
+	emptyState: 'No folder query set.',
+	onReorder: async (oldIndex, newIndex) => {
+		let folders = this.plugin.settings.folderQueries;
+		let [moved] = folders.splice(oldIndex, 1);
+		folders.splice(newIndex, 0, moved);
+		await this.plugin.saveData(this.plugin.settings);
+		this.update();
+	},
+	onDelete: async (idx) => {
+		this.plugin.settings.folderQueries.splice(idx, 1);
+		await this.plugin.saveData(this.plugin.settings);
+		this.update();
+	},
+	items: this.plugin.settings.folderQueries.map((f) => ({
+		name: `${f[0]}: "${f[1]}"`,
+		searchable: false,
+		})),
+	},
+	{
+	render: (setting) => {
+		setting.settingEl.className = "task_finder_setting_add_folder"
+		let containerEl = setting.infoEl
+		containerEl.empty();
+		new obsidian.Setting(containerEl)
+		.setName("Add folder query")
+		.setDesc("Set default query used when editing a file in a given folder.")
+		.addSearch((search) => {
+			search.setPlaceholder("Query")
+			this.plugin.settings.folder_query = search
+			})
+		.addSearch((search) => {
+			search.setPlaceholder('Folder')
+			new SettingsFolderQuerySuggest(this.plugin, search.inputEl);
 		})
 	}},
 	{name: 'Query Debounce Time', desc: 'The time between typing and query-execution (miliseconds).',
 	 control: { type: 'number', key: 'queryDebounceTime', placeholder: 'Enter query debounce time', min: 0} },
 	{name: 'Task View Limit', desc: 'The max. number of tasks shown.',
 	 control: { type: 'number', key: 'taskViewLimit', placeholder: 'Enter task view limit', min: 1} },
+	{name: 'Show task-cache refresh message.', desc: 'Show a message indicating changed files and duration of task-cache evaluation.',
+	 control: { type: 'toggle', key: 'showCacheRefreshMessage', placeholder: 'Enter task view limit', min: 1} },
+
 	]
 	}
 }
@@ -202,7 +392,11 @@ class TaskSuggester extends obsidian.SuggestModal {
 	  this.debounceonInput = obsidian.debounce(() => { super.onInput(); }, this.plugin.settings.queryDebounceTime, true)
 
 	  this.emptyStateText = "Oh nice... seems like there's nothing to do!"
-
+	  this.inputEl.placeholder = "@: date  |  +-: range  |  #: tags  |  ?: status  |  $: path"
+	  // attach auto-completer
+	  new StatusSuggest(this.plugin, this.inputEl)
+	  new TagSuggest(this.plugin, this.inputEl)
+	  new QueryFolderSuggest(this.plugin, this.inputEl)
 
 	  const header = this.modalEl.createEl("div", {cls:"task_finder_modal_header"})
 	  header.setAttribute("id", "task_finder_header")
@@ -225,8 +419,8 @@ class TaskSuggester extends obsidian.SuggestModal {
 	  const active_file = this.plugin.app.workspace.getActiveFile()
 	  if ( active_file ) {
 		  // check if file is in a folder that has a folderQuery defined
-		 for (const folderQuery in defaultQueryFolders) {
-			 if (active_file.path.startsWith(folderQuery)) { this.inputEl.defaultValue = defaultQueryFolders[folderQuery]; break}
+		 for (const folderQuery of this.plugin.settings.folderQueries) {
+			 if (active_file.path.startsWith(folderQuery[0])) { this.inputEl.defaultValue = folderQuery[1]; break}
 		 }
 
 		 // check if there is an explicit default query for the file
@@ -293,34 +487,69 @@ class TaskSuggester extends obsidian.SuggestModal {
 	}
 
 	use_content = use_content.filter((t) => (
-		(t.date == null && (include_unscheduled))) | ((t.date != null) && (((startvalue)?t.date.isSameOrAfter(startvalue):true) && ((endvalue)?t.date.isSameOrBefore(endvalue):true)))
+		(t.date == null && (!direction | include_unscheduled))) | ((t.date != null) && (((startvalue)?t.date.isSameOrAfter(startvalue):true) && ((endvalue)?t.date.isSameOrBefore(endvalue):true)))
 		)
 
-	// check for tags in the query
+	// check if we want to use only tasks with inline-tags
 	const require_inline_tags = query.includes("#*")
 	if ( require_inline_tags ) {
 		use_content = use_content.filter((t) => (t.tags)?t.tags.length>0:false);
 		query = query.replace("#*", "")
 	}
 
-	// check for task status query
-	const require_unchecked = query.match(/(?<=^|\s)\?(?=\s|$)/)
-	if (require_unchecked) {
-		query = query.replace(require_unchecked[0], "")
-		use_content = use_content.filter((t) => (t.task_status != "x"));
-	}
 
-	const require_checkstatus_tags = query.match(/(?<=^|\s)\?(\S+)(?=\s|$)/)
+	// check include task statuses
+	const require_checkstatus_tags = query.match(/(?<=^|\s)\?(\S+)?(?=\s|$)/)
 	let required_task_statuses = [];
 	if ( require_checkstatus_tags ) {
-		required_task_statuses.push(...require_checkstatus_tags[1].split(''))
 		query = query.replace(require_checkstatus_tags[0], "")
+		if (require_checkstatus_tags[1]){
+			const usestatuses = require_checkstatus_tags[1].replace("~", " ")
+			required_task_statuses.push(...usestatuses.split(''))
 
-		required_task_statuses = [...new Set(required_task_statuses)].sort()
-		use_content = use_content.filter((t) => required_task_statuses.includes(t.task_status));
-
+			required_task_statuses = [...new Set(required_task_statuses)].sort()
+			use_content = use_content.filter((t) => required_task_statuses.includes(t.task_status));
+		}
 	}
 
+	// check exclude task statuses
+	const exclude_checkstatus_tags = query.match(/(?<=^|\s)\~\?(\S+)?(?=\s|$)/)
+	let excluded_task_statuses = [];
+	if ( exclude_checkstatus_tags ) {
+		query = query.replace(exclude_checkstatus_tags[0], "")
+		if (exclude_checkstatus_tags[1]){
+			const usestatuses = exclude_checkstatus_tags[1].replace("~", " ")
+			excluded_task_statuses.push(...usestatuses.split(''))
+
+			excluded_task_statuses = [...new Set(excluded_task_statuses)].sort()
+			use_content = use_content.filter((t) => !excluded_task_statuses.includes(t.task_status));
+		}
+	}
+
+	// check exclude tags
+	const excludedtagmatch = query.match(/(?<=^|\s)~#(\S*)(?=\s|$)/g)
+	if ( excludedtagmatch ) {
+		for (i in excludedtagmatch) {
+			query = query.replace(excludedtagmatch[i], "")
+			excludedtagmatch[i] = excludedtagmatch[i].slice(1).trim().toLowerCase()
+			}
+
+		function checkexcludedtags(task) {
+			return excludedtagmatch.every( ( tag ) => {
+				if ( task.file_tags ) {
+					if (task.file_tags.some((t) => t.toLowerCase().includes(tag))) { return false }
+				}
+				if ( task.tags ) {
+					if (task.tags.some((t) => t.toLowerCase().includes(tag))) { return false }
+				}
+				return true
+			})
+		}
+
+		use_content = use_content.filter(checkexcludedtags);
+		}
+
+	// check include tags
 	const tagmatch = query.match(/(?<=^|\s)#(\S*)(?=\s|$)/g)
 	if ( tagmatch ) {
 		for (i in tagmatch) {
@@ -344,6 +573,48 @@ class TaskSuggester extends obsidian.SuggestModal {
 
 
 
+	// check include folders
+	const foldermatch = query.match(/(?<=^|\s)\$(\S*)(?=\s|$)/g)
+	if ( foldermatch ) {
+		for (i in foldermatch) {
+			query = query.replace(foldermatch[i], "")
+			foldermatch[i] = foldermatch[i].trim().toLowerCase().slice(1)
+			}
+
+		function checkfolders(task) {
+			return foldermatch.every( ( folder ) => {
+				if (task.path.toLowerCase().includes(folder)) { return true }
+			})
+		}
+
+		use_content = use_content.filter(checkfolders);
+		}
+
+	// check exclude folders
+	const excludefoldermatch = query.match(/(?<=^|\s)\~\$(\S*)(?=\s|$)/g)
+	if ( excludefoldermatch ) {
+		for (i in excludefoldermatch) {
+			query = query.replace(excludefoldermatch[i], "")
+			excludefoldermatch[i] = excludefoldermatch[i].trim().toLowerCase().slice(2)
+			}
+
+		function checkexcludefolders(task) {
+			return excludefoldermatch.every( ( folder ) => {
+				if (folder && task.path.toLowerCase().includes(folder)) { return false } else { return true }
+			})
+		}
+
+		use_content = use_content.filter(checkexcludefolders);
+		}
+
+
+	// avoid altering query if negation operator (~) is typed
+	const negationoperator = query.match(/(?<=^|\s)\~(?=\s|$)/)
+	if (negationoperator) {
+		query = query.substring(0, negationoperator.index) + query.substring(negationoperator.index + 1)
+	}
+
+
 	const query_words = query.toLowerCase().split(" ")
 	function check (task) {
 		return query_words.every( ( word ) => {
@@ -354,7 +625,13 @@ class TaskSuggester extends obsidian.SuggestModal {
 	}
 
 	use_content = use_content.filter(check);
-	const grouped = Object.entries(Object.groupBy(use_content, (o) => o.date?o.date.format("YYYY-MM-DD"):null));
+
+	let grouped;
+	if (this.plugin.settings.groupTasks == "date") {
+		grouped = Object.entries(Object.groupBy(use_content, (o) => o.date?o.date.format("YYYY-MM-DD"):null));
+	} else if (this.plugin.settings.groupTasks == "filename") {
+		grouped = Object.entries(Object.groupBy(use_content, (o) => o.path?o.path.slice(0,-3):null));
+	}
 
 
 	// update header text
@@ -373,10 +650,7 @@ class TaskSuggester extends obsidian.SuggestModal {
 	document.getElementById("task_finder_header_comment_tags").setText(
 	((tagmatch!=null|require_inline_tags)?"#":"") + (require_inline_tags?"inline-":"")+((tagmatch!=null|require_inline_tags)?"tags":""))
 
-	console.log(
-	((tagmatch!=null|require_inline_tags)?"#":"") + (require_inline_tags?"inline-":"")+((tagmatch!=null|require_inline_tags)?"tags":""))
-
-	document.getElementById("task_finder_header_comment_unchecked").setText(require_unchecked?"unchecked ":"")
+	document.getElementById("task_finder_header_comment_unchecked").setText(((excluded_task_statuses.length>0)?"not status: ":"") + excluded_task_statuses.join(","))
 	document.getElementById("task_finder_header_comment_statuses").setText(((required_task_statuses.length > 0)?"status: ":"") + required_task_statuses.join(","))
 	document.getElementById("task_finder_header_ntasks").setText(`scheduled: ${n_scheduled}  |  ${include_unscheduled?`unscheduled: ${n_undefined}  |`:''} total: ${this.content.length}`)
 
@@ -451,25 +725,41 @@ class TaskSuggester extends obsidian.SuggestModal {
 
   // Renders each suggestion item.
   renderSuggestion(matches, el) {
-	let [day, daymatches] = matches
-	day = moment(day)
-	const is_today = moment(day).isSame(moment(), "day")
+	let [grp, daymatches] = matches
 
-	let daytxt = "Unscheduled"
-	if (day.isValid()) {
-		daytxt = `${day.format("dd, YYYY-MM-DD")}`
-	}
+	let header_txt = "?"
+	let header_txt_right = "a"
+
 
 	// append class to item container of today
 	el.className = `task_finder ${el.className}`
 
-	el.className = el.className + ((is_today)?' tasks_of_today':'')
+
+	// check grouping behavior and assign headers accordingly
+	let is_today;
+	if (this.plugin.settings.groupTasks == "date") {
+		let day = moment(grp)
+		is_today = moment(day).isSame(moment(), "day")
+
+		header_txt = "Unscheduled"
+		if (day.isValid()) {
+			header_txt = `${day.format("dd, YYYY-MM-DD")}`
+		}
+
+		header_txt_right = day.isValid()?((is_today)?"today":moment(day).fromNow()):""
+
+		// add class suffix to tasks of today
+		el.className = el.className + ((is_today)?' tasks_of_today':'')
+
+	} else {
+		header_txt = grp
+		header_txt_right = ""
+	}
 
 	const header = el.createEl('div', {cls: 'task_suggestion_header'});
-
-	const daydiv = header.createEl('div', {cls: 'task_suggestion_header_left', text: daytxt});
+	const daydiv = header.createEl('div', {cls: 'task_suggestion_header_left', text: header_txt});
 	const daydiv1 = header.createEl('div', {cls: 'task_suggestion_header_center'});
-	const daydiv2 = header.createEl('div', {cls: 'task_suggestion_header_right', text: day.isValid()?((is_today)?"today":moment(day).fromNow()):""});
+	const daydiv2 = header.createEl('div', {cls: 'task_suggestion_header_right', text: header_txt_right});
 
 	for (const match of daymatches){
 		const c = el.createEl('div', {cls:'task_suggestion_container'});
@@ -507,8 +797,7 @@ class TaskSuggester extends obsidian.SuggestModal {
 		if (tags) {
 			const tagcontainer = footnote.createEl('div', {cls:'task_finder_footnote_tag_container'})
 		for ( const tag of tags ) {
-			const t = tagcontainer.createEl('small').createEl('a', {cls:'tag colored-tag-task', text:tag})
-			t.setAttribute("href", tag)
+			const t = tagcontainer.createEl('small').createEl('a', {cls:'tag colored-tag-task', text:tag, attr:{href:tag}})
 		}
 		}
 
@@ -540,8 +829,8 @@ class TaskSuggester extends obsidian.SuggestModal {
 			dt.setAttribute("data-is-before", match.date.isBefore())
 			dt.setAttribute("data-checked", match.meta.task == "x")
 		}
-
 	}
+
   };
 
   onChooseSuggestion(task, evt) {
@@ -552,9 +841,9 @@ class TaskSuggester extends obsidian.SuggestModal {
 
 
 function getTaskCache(plugin, checked='all') {
-	let file_cache = plugin.app.metadataCache.fileCache
-	let metadata_cache = plugin.app.metadataCache.metadataCache
-	let found = []
+	const file_cache = plugin.app.metadataCache.fileCache
+	const metadata_cache = plugin.app.metadataCache.metadataCache
+	let found = {}
 	let contents = []
 
 	let excludedFolders = Object.groupBy(plugin.settings.excludedFolders, (f)=> f.startsWith("regex:"))
@@ -591,7 +880,7 @@ function getTaskCache(plugin, checked='all') {
 		} else if ( checked == 'all' ) {
 			tasks = all_tasks
 		}
-		if ( tasks.length > 0 ) { found.push([path, tasks, file_tags]) }
+		if ( tasks.length > 0 ) { found[path] = [tasks, file_tags, c_file.hash] }
 
 	}
 
@@ -599,11 +888,28 @@ function getTaskCache(plugin, checked='all') {
 }
 
 async function getTasks(plugin, checked='all') {
-	const found = getTaskCache(plugin, checked)
+	const startTime = performance.now()
 
-	let tasks = []
+	const task_file_cache = getTaskCache(plugin, checked)
+	// remove all hashes that no longer exist in the cache (deleted/changed files)
+	const current_file_hashes = Object.values(task_file_cache).map((a)=> a[2])
+	for (const hash in plugin.taskCache) {
+		if (!current_file_hashes.includes(hash)) {
+			delete plugin.taskCache[hash]
+		}
+	}
 
-	for (const [path, task_meta, file_tags] of found) {
+	let updated_files = []
+	for (const [path, [task_meta, file_tags, hash]] of Object.entries(task_file_cache)) {
+		// reindex files only if hash changed
+		if (hash in plugin.taskCache) {
+			continue
+		} else {
+			updated_files.push(path)
+		}
+
+		plugin.taskCache[hash] = []
+
 		const content = await app.vault.cachedRead(plugin.app.vault.getFileByPath(path))
 		for (const m of task_meta ) {
 			const full_text = content.split("\n")[m.position.start.line]
@@ -701,7 +1007,7 @@ async function getTasks(plugin, checked='all') {
 						tags[i] = tags[i].trim()
 					}
 				}
-				tasks.push({
+				plugin.taskCache[hash].push({
 					path:path,
 					meta:m,
 					full_text:full_text,
@@ -718,37 +1024,53 @@ async function getTasks(plugin, checked='all') {
 			}
 		}
 	}
-	return tasks
+	const endTime = performance.now()
+
+	if (plugin.settings.showCacheRefreshMessage && updated_files.length > 0) {
+		let msg = ""
+		if (updated_files.length > 3) {
+			msg = `TaskFinder: Refreshed task-cache of ${updated_files.length} files in (${((endTime - startTime)/1000).toFixed(2)}s)$.`
+		} else {
+			msg = "TaskFinder: Refreshed task-cache for:\n  - " + updated_files.join("\n  - ")
+		}
+		new obsidian.Notice(msg)
+	}
+
+
+
+	return plugin.taskCache
 }
 
 async function refreshTaskCache(plugin) {
 	if (plugin.refresh_cache == true) {
 		plugin.tasks = await getTasks(plugin, checked=plugin.settings.includeStatus)
+		// for autocompletion:
+		// retrieve all tags set on tasks (alternative for ALL tags: plugin.app.metadataCache.getTags() )
+		plugin.allTags = [...new Set(Object.values(plugin.taskCache).flat().map((t)=> t.tags?t.tags:[]).flat())].sort()
+		// retrieve all folders that contain notes with tasks
+		plugin.allFolders = [...new Set(Object.values(plugin.taskCache).flat().map((t)=> t.path.split("/").slice(0,-1).join("/")))].sort()
 		plugin.refresh_cache = false
 	}
 }
 
 
 
-class SimpleTasks extends obsidian.Plugin {
-
-	openSuggester() {
-		//IIFE pattern to allow async call here
-		(async () => {
-				this.tasks = await getTasks(this, this.settings.includeStatus);
-				new TaskSuggester(this, this.tasks).open();
-				})();
-	};
-
+class TaskFinder extends obsidian.Plugin {
 	async onload() {
+		this.taskCache = {};
+		this.allTags = [];
+
+		this.refresh_cache = true
+
 		await this.loadSettings();
 
 		this.addSettingTab(new SettingTab(this.app, this));
 
-		// TODO do we want to refresh?
-		//app.metadataCache.on('changed', async (file, data, cache) => { await refreshTaskCache(this) })
-		this.refresh_cache = true
-		app.metadataCache.on('changed', async (file, data, cache) => { this.refresh_cache = true })
+
+
+		app.metadataCache.on('resolved', async (file, data, cache) => {
+			this.refresh_cache = true
+		})
 
 		this.addCommand({
 		  id: 'find-tasks',
@@ -757,7 +1079,7 @@ class SimpleTasks extends obsidian.Plugin {
 			//IIFE pattern to allow async call here
 			(async () => {
 				await refreshTaskCache(this);
-				new TaskSuggester(this, this.tasks).open();
+				new TaskSuggester(this, Object.values(this.tasks).flat(1)).open();
 				})();
 		}})
 
@@ -765,7 +1087,7 @@ class SimpleTasks extends obsidian.Plugin {
 			//IIFE pattern to allow async call here
 			(async () => {
 				await refreshTaskCache(this);
-				new TaskSuggester(this, this.tasks).open();
+				new TaskSuggester(this, Object.values(this.tasks).flat(1)).open();
 				})();
 		});
 	}
@@ -788,4 +1110,4 @@ class SimpleTasks extends obsidian.Plugin {
 
 }
 
-module.exports = SimpleTasks;
+module.exports = TaskFinder;
