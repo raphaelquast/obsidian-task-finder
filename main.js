@@ -611,13 +611,11 @@ class TaskSuggester extends obsidian.SuggestModal {
 		grouped = Object.entries(Object.groupBy(use_content, (o) => o.path?o.path.slice(0,-3):null));
 	}
 
-
 	// update header text
-	const header = document.getElementById("task_finder_header")
-	document.getElementById("task_finder_h_anchor_date").setText(`${now.format('dd, YYYY-MM-DD')}`)
+	this.h_anchor_date_el.setText(`${now.format('dd, YYYY-MM-DD')}`)
 
 	const unit_names = {"d":"day", "w":"week", "m":"month", "y":"year"}
-	document.getElementById("task_finder_h_date_range").setText(`${direction?` ${direction}`:""}${value?value:''}${(unit&&value)?' ' + unit_names[unit.toLowerCase()] + ((value>1)?'s':''):''}`)
+	this.h_date_range_el.setText(`${direction?` ${direction}`:""}${value?value:''}${(unit&&value)?' ' + unit_names[unit.toLowerCase()] + ((value>1)?'s':''):''}`)
 
 	let n_undefined = 0;// = include_unscheduled?grouped.find((g)=>g[0]=='null')[1].length:0
 	if ( include_unscheduled ) {
@@ -625,12 +623,12 @@ class TaskSuggester extends obsidian.SuggestModal {
 		n_undefined = undef_tasks?undef_tasks[1].length:0
 	}
 	const n_scheduled = use_content.length - n_undefined
-	document.getElementById("task_finder_header_comment_tags").setText(
+	this.h_comment_tags_el.setText(
 	((tagmatch!=null|require_inline_tags)?"#":"") + (require_inline_tags?"inline-":"")+((tagmatch!=null|require_inline_tags)?"tags":""))
 
-	document.getElementById("task_finder_header_comment_unchecked").setText(((excluded_task_statuses.length>0)?"not status: ":"") + excluded_task_statuses.join(","))
-	document.getElementById("task_finder_header_comment_statuses").setText(((required_task_statuses.length > 0)?"status: ":"") + required_task_statuses.join(","))
-	document.getElementById("task_finder_header_ntasks").setText(`scheduled: ${n_scheduled}  |  ${include_unscheduled?`unscheduled: ${n_undefined}  |`:''} total: ${this.content.length}`)
+	this.h_comment_unchecked_el.setText(((excluded_task_statuses.length>0)?"not status: ":"") + excluded_task_statuses.join(","))
+	this.h_comment_statuses_el.setText(((required_task_statuses.length > 0)?"status: ":"") + required_task_statuses.join(","))
+	this.h_ntasks_el.setText(`scheduled: ${n_scheduled}  |  ${include_unscheduled?`unscheduled: ${n_undefined}  |`:''} total: ${this.content.length}`)
 
 	// update suggester values
 	refreshAutocomplete(this.plugin, use_content)
