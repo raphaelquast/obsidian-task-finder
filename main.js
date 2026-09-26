@@ -1,9 +1,6 @@
 const obsidian = require('obsidian');
 moment.locale('de')
 
-// #*            : include only tasks that have an explicit tag assigned
-// # (at the end): include only tasks that have a tag or file-tag
-
 // default queries set if explicit file is opened
 let defaultQueryFiles = {
 	}
@@ -18,6 +15,7 @@ const DEFAULT_SETTINGS = {
 	"folderQueries":[],
 	"showCacheRefreshMessage": true,
 	"groupTasks":"date",
+	"includeSubTasks":false,
 }
 
 
@@ -57,10 +55,11 @@ class FolderSuggest extends obsidian.AbstractInputSuggest {
 class QueryFolderSuggest extends FolderSuggest {
 	constructor(plugin, inputEl) {
 	super(plugin, inputEl)
-	this.content = this.plugin.allFolders
 	}
 
 	getSuggestions(query) {
+		this.content = this.plugin.allFolders
+
 		const words = query.split(" ")
 		let word = words.at(-1)
 	if (word){
@@ -105,47 +104,16 @@ class SettingsFolderQuerySuggest extends SettingsFolderSuggest {
 	}
 }
 
-
-
-const task_statuses = [
-	{status: ' ' , label:'to-do'},
-	{status: '/' , label:'incomplete'},
-	{status: '>' , label:'forwarded'},
-	{status: '<' , label:'scheduling'},
-	{status: '?' , label:'question'},
-	{status: '!' , label:'important'},
-	{status: '*' , label:'star'},
-	{status: '"' , label:'quote'},
-	{status: 'l' , label:'location'},
-	{status: 'b' , label:'bookmark'},
-	{status: 'i' , label:'information'},
-	{status: 'S' , label:'savings'},
-	{status: 'I' , label:'idea'},
-	{status: 'p' , label:'pros'},
-	{status: 'c' , label:'cons'},
-	{status: 'f' , label:'fire'},
-	{status: 'k' , label:'key'},
-	{status: 'w' , label:'win'},
-	{status: 'u' , label:'up'},
-	{status: 'd' , label:'down'},
-	{status: 'n' , label:'needle'},
-	{status: 'r' , label:'right'},
-	{status: 't' , label:'time'},
-	{status: 'x' , label:'done'},
-	{status: '-' , label:'canceled'},
-];
-
 class StatusSuggest extends obsidian.AbstractInputSuggest {
 	constructor(plugin, inputEl) {
 	super(plugin.app, inputEl)
 	this.plugin = plugin
 	this.inputEl = inputEl
-	this.content = task_statuses.map((s)=> s.status)
-}
+	}
 
 	getSuggestions(query) {
 		const words = query.split(" ")
-		if (words && (words.at(-1).startsWith("?") | words.at(-1).startsWith("~?"))) { return this.content } else { this.close() }
+		if (words && (words.at(-1).startsWith("?") | words.at(-1).startsWith("~?"))) { return this.plugin.allStatuses } else { this.close() }
 	}
 
 	renderSuggestion(content, el) {
@@ -168,13 +136,12 @@ class TagSuggest extends obsidian.AbstractInputSuggest {
 	super(plugin.app, inputEl)
 	this.plugin = plugin
 	this.inputEl = inputEl
-	this.content = this.plugin.allTags
 }
 
 	getSuggestions(query) {
 		const words = query.split(" ")
 		if (words && words.at(-1).startsWith("#")) {
-			return this.content.filter((t) => t.toLowerCase().includes(words.at(-1).toLowerCase().slice(1)))
+			return this.plugin.allTags.filter((t) => t.toLowerCase().includes(words.at(-1).toLowerCase().slice(1)))
 		} else { this.close() }
 	}
 
@@ -362,7 +329,10 @@ class SettingTab extends obsidian.PluginSettingTab {
 	{name: 'Task View Limit', desc: 'The max. number of tasks shown.',
 	 control: { type: 'number', key: 'taskViewLimit', placeholder: 'Enter task view limit', min: 1} },
 	{name: 'Show task-cache refresh message.', desc: 'Show a message indicating changed files and duration of task-cache evaluation.',
-	 control: { type: 'toggle', key: 'showCacheRefreshMessage', placeholder: 'Enter task view limit', min: 1} },
+	 control: { type: 'toggle', key: 'showCacheRefreshMessage'} },
+	{name: 'Include sub-tasks?', desc: 'If true, sub-tasks are included. Otherwise only parent-tasks are shown.',
+	control: { type: 'toggle', key: 'includeSubTasks' }},
+
 
 	]
 	}
@@ -439,6 +409,7 @@ class TaskSuggester extends obsidian.SuggestModal {
 
   // Returns all available suggestions.
   getSuggestions(query){
+
 	let use_content = this.content
 
 	// select tasks without a date (e.g. unscheduled)
@@ -486,9 +457,12 @@ class TaskSuggester extends obsidian.SuggestModal {
 		if (direction.includes("+")) { endvalue = (value)?now.clone().endOf("day").add(value, unit):null; }
 	}
 
-	use_content = use_content.filter((t) => (
-		(t.date == null && (!direction | include_unscheduled))) | ((t.date != null) && (((startvalue)?t.date.isSameOrAfter(startvalue):true) && ((endvalue)?t.date.isSameOrBefore(endvalue):true)))
-		)
+	const show_unscheduled = (!((datematch?true:false) | (rangematch?true:false))) | include_unscheduled
+	use_content = use_content.filter((t) =>  {
+		if (t.date == null ) {return show_unscheduled} else {
+			return (((startvalue)?t.date.isSameOrAfter(startvalue):true) && ((endvalue)?t.date.isSameOrBefore(endvalue):true))
+		}}
+	)
 
 	// check if we want to use only tasks with inline-tags
 	const require_inline_tags = query.includes("#*")
@@ -654,7 +628,9 @@ class TaskSuggester extends obsidian.SuggestModal {
 	document.getElementById("task_finder_header_comment_statuses").setText(((required_task_statuses.length > 0)?"status: ":"") + required_task_statuses.join(","))
 	document.getElementById("task_finder_header_ntasks").setText(`scheduled: ${n_scheduled}  |  ${include_unscheduled?`unscheduled: ${n_undefined}  |`:''} total: ${this.content.length}`)
 
-	//document.getElementById("task_finder_header_comment").setText(comments.join(" | "))
+	// update suggester values
+	refreshAutocomplete(this.plugin, use_content)
+
 	return grouped
 
 
@@ -725,10 +701,10 @@ class TaskSuggester extends obsidian.SuggestModal {
 
   // Renders each suggestion item.
   renderSuggestion(matches, el) {
-	let [grp, daymatches] = matches
+	let [grp, grp_matches] = matches
 
-	let header_txt = "?"
-	let header_txt_right = "a"
+	let header_txt = "???"
+	let header_txt_right = "???"
 
 
 	// append class to item container of today
@@ -736,17 +712,18 @@ class TaskSuggester extends obsidian.SuggestModal {
 
 
 	// check grouping behavior and assign headers accordingly
-	let is_today;
+	let is_today = false;
 	if (this.plugin.settings.groupTasks == "date") {
-		let day = moment(grp)
-		is_today = moment(day).isSame(moment(), "day")
-
-		header_txt = "Unscheduled"
-		if (day.isValid()) {
+		let day = (grp=="null")?null:moment(grp)
+		if (!day) {
+			header_txt = "Unscheduled"
+			header_txt_right = `(${grp_matches.length} ${grp_matches.length > 1?'tasks':'task'})`
+		} else if (day.isValid()) {
+			is_today = moment(day).isSame(moment(), "day")
 			header_txt = `${day.format("dd, YYYY-MM-DD")}`
+			header_txt_right = (is_today)?"today":moment(day).fromNow()
 		}
 
-		header_txt_right = day.isValid()?((is_today)?"today":moment(day).fromNow()):""
 
 		// add class suffix to tasks of today
 		el.className = el.className + ((is_today)?' tasks_of_today':'')
@@ -761,7 +738,7 @@ class TaskSuggester extends obsidian.SuggestModal {
 	const daydiv1 = header.createEl('div', {cls: 'task_suggestion_header_center'});
 	const daydiv2 = header.createEl('div', {cls: 'task_suggestion_header_right', text: header_txt_right});
 
-	for (const match of daymatches){
+	for (const match of grp_matches){
 		const c = el.createEl('div', {cls:'task_suggestion_container'});
 
 		// prevent default click actions from propagating
@@ -783,7 +760,14 @@ class TaskSuggester extends obsidian.SuggestModal {
 		s.addEventListener('click', this.openNote(this, match) );
 
 		if ( match.additional_text ) {
-			const add_txt = taskdiv.createEl('div', {cls:'task_finder_additional_text_container', text:match.additional_text});
+			const add_txt = taskdiv.createEl('div', {cls:'task_finder_additional_text_container'});
+			for (const i in match.additional_text) {
+				add_txt.createEl("div", {text:match.additional_text[i]})
+				if (i > 4) {
+					add_txt.createEl("div", {text:'...'})
+					break
+					}
+			}
 		}
 
 		const d = c.createEl('div');
@@ -839,7 +823,6 @@ class TaskSuggester extends obsidian.SuggestModal {
 }
 
 
-
 function getTaskCache(plugin, checked='all') {
 	const file_cache = plugin.app.metadataCache.fileCache
 	const metadata_cache = plugin.app.metadataCache.metadataCache
@@ -853,20 +836,23 @@ function getTaskCache(plugin, checked='all') {
 
 	for (const [path, c_file] of Object.entries(file_cache).filter(([key]) => key.endsWith('.md'))) {
 		if (!(c_file["hash"] in metadata_cache)) { continue }
-		//exclude files in excludedFolders (and subirectories thereof)
 
+		//exclude files in excludedFolders (and subirectories thereof)
 		if ( excludedFolders[false] && excludedFolders[false].some( (ef) => path.startsWith(ef) ) ) { continue }
 		if ( excludedFolders[true] && excludedFolders[true].some( (ef) => path.match(ef) ) ) { continue }
 
 		let c_meta = metadata_cache[c_file["hash"]]
+
+		// if there are no lists in the file, we can ignore it
 		if (!("listItems" in c_meta)) { continue }
-		const all_tasks = c_meta.listItems.filter((obj) => "task" in obj)
+		const all_tasks = c_meta.listItems.filter((obj) => ("task" in obj) && (plugin.settings.includeSubTasks?true:(obj.parent == -1)))
+
+		if (all_tasks.length == 0) { continue }
 
 /* 		for (t of all_tasks) {
 			t.sublist = c_meta.listItems.filter((obj) => obj.parent == t.position.start.line)
 		}
  */
-		if (all_tasks.length == 0) { continue }
 
 		let file_tags = c_meta.frontmatter?.tags
 
@@ -888,8 +874,6 @@ function getTaskCache(plugin, checked='all') {
 }
 
 async function getTasks(plugin, checked='all') {
-	const startTime = performance.now()
-
 	const task_file_cache = getTaskCache(plugin, checked)
 	// remove all hashes that no longer exist in the cache (deleted/changed files)
 	const current_file_hashes = Object.values(task_file_cache).map((a)=> a[2])
@@ -899,13 +883,13 @@ async function getTasks(plugin, checked='all') {
 		}
 	}
 
-	let updated_files = []
+	let number_of_updated_files = []
 	for (const [path, [task_meta, file_tags, hash]] of Object.entries(task_file_cache)) {
 		// reindex files only if hash changed
 		if (hash in plugin.taskCache) {
 			continue
 		} else {
-			updated_files.push(path)
+			number_of_updated_files.push(path)
 		}
 
 		plugin.taskCache[hash] = []
@@ -924,15 +908,14 @@ async function getTasks(plugin, checked='all') {
 					additional_text.push(l)
 				} else { break }
 			}
-			additional_text = additional_text.join("\n")
 
 			let tasktext = full_text
-			let task_status = tasktext.match(/^- \[(.)\] /)
+			let task_match = tasktext.match(/- \[(.)\] /)
 
 
-			if ( task_status ) {
-				task_status = task_status[1];
-				tasktext = tasktext.slice(6)
+			if ( task_match ) {
+				const task_status = task_match[1];
+				tasktext = tasktext.slice(task_match.index + 6)
 
 				// try to find date assigned to task
 				let datestr = tasktext.match(/[📅⏳🛫] \d\d\d\d-\d\d-\d\d/gu);
@@ -1024,32 +1007,52 @@ async function getTasks(plugin, checked='all') {
 			}
 		}
 	}
-	const endTime = performance.now()
 
-	if (plugin.settings.showCacheRefreshMessage && updated_files.length > 0) {
-		let msg = ""
-		if (updated_files.length > 3) {
-			msg = `TaskFinder: Refreshed task-cache of ${updated_files.length} files in (${((endTime - startTime)/1000).toFixed(2)}s)$.`
-		} else {
-			msg = "TaskFinder: Refreshed task-cache for:\n  - " + updated_files.join("\n  - ")
-		}
-		new obsidian.Notice(msg)
+	return number_of_updated_files
+}
+
+function refreshAutocomplete(plugin, content) {
+	// retrieve all tags, statuses and folders of tasks for autocompletion
+	// (alternative for ALL tags: plugin.app.metadataCache.getTags() )
+	plugin.allTags = [];
+	plugin.allFolders = [];
+	plugin.allStatuses = [];
+	for ((t) of Object.values(content).flat()) {
+		plugin.allTags.push(t.tags?t.tags:[])
+		plugin.allFolders.push(t.path.split("/").slice(0,-1).join("/"))
+		plugin.allStatuses.push(t.task_status)
 	}
+	plugin.allTags = [... new Set(plugin.allTags.flat())].sort()
+	plugin.allFolders = [... new Set(plugin.allFolders)].sort()
+	plugin.allStatuses = [... new Set(plugin.allStatuses)].sort()
 
-
-
-	return plugin.taskCache
 }
 
 async function refreshTaskCache(plugin) {
 	if (plugin.refresh_cache == true) {
-		plugin.tasks = await getTasks(plugin, checked=plugin.settings.includeStatus)
-		// for autocompletion:
-		// retrieve all tags set on tasks (alternative for ALL tags: plugin.app.metadataCache.getTags() )
-		plugin.allTags = [...new Set(Object.values(plugin.taskCache).flat().map((t)=> t.tags?t.tags:[]).flat())].sort()
-		// retrieve all folders that contain notes with tasks
-		plugin.allFolders = [...new Set(Object.values(plugin.taskCache).flat().map((t)=> t.path.split("/").slice(0,-1).join("/")))].sort()
+		let note;
+		if (plugin.settings.showCacheRefreshMessage){
+			note = new obsidian.Notice('refreshing cache...');
+		};
+
+		const startTime = performance.now();
+		const number_of_updated_files = await getTasks(plugin, checked=plugin.settings.includeStatus)
+		refreshAutocomplete(plugin, plugin.taskCache)
+		const endTime = performance.now()
 		plugin.refresh_cache = false
+
+		if (plugin.settings.showCacheRefreshMessage && number_of_updated_files.length > 0) {
+			let msg = "";
+			if (number_of_updated_files.length > 3) {
+				msg = `TaskFinder: Refreshed task-cache of ${number_of_updated_files.length} files in (${((endTime - startTime)/1000).toFixed(2)}s)$.`;
+			} else {
+				msg = "TaskFinder: Refreshed task-cache for:\n  - " + number_of_updated_files.join("\n  - ");
+			};
+			note.hide();
+			new obsidian.Notice(msg);
+		}
+
+
 	}
 }
 
@@ -1058,7 +1061,10 @@ async function refreshTaskCache(plugin) {
 class TaskFinder extends obsidian.Plugin {
 	async onload() {
 		this.taskCache = {};
-		this.allTags = [];
+
+		this.allQueryTags = [];
+		this.allQueryStatuses = [];
+		this.allQueryFolders = [];
 
 		this.refresh_cache = true
 
@@ -1079,7 +1085,7 @@ class TaskFinder extends obsidian.Plugin {
 			//IIFE pattern to allow async call here
 			(async () => {
 				await refreshTaskCache(this);
-				new TaskSuggester(this, Object.values(this.tasks).flat(1)).open();
+				new TaskSuggester(this, Object.values(this.taskCache).flat(1)).open();
 				})();
 		}})
 
@@ -1087,7 +1093,7 @@ class TaskFinder extends obsidian.Plugin {
 			//IIFE pattern to allow async call here
 			(async () => {
 				await refreshTaskCache(this);
-				new TaskSuggester(this, Object.values(this.tasks).flat(1)).open();
+				new TaskSuggester(this, Object.values(this.taskCache).flat(1)).open();
 				})();
 		});
 	}
