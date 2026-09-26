@@ -367,22 +367,25 @@ class TaskSuggester extends obsidian.SuggestModal {
 	  new StatusSuggest(this.plugin, this.inputEl)
 	  new TagSuggest(this.plugin, this.inputEl)
 	  new QueryFolderSuggest(this.plugin, this.inputEl)
+  }
 
+  createHeader() {
 	  const header = this.modalEl.createEl("div", {cls:"task_finder_modal_header"})
 	  header.setAttribute("id", "task_finder_header")
 
 	  const dateEl = header.createEl("div", {attr: {id:'task_finder_header_date'}})
-	  dateEl.createEl("span", {attr: {id:'task_finder_h_anchor_date'}})
-	  dateEl.createEl("span", {attr: {id:'task_finder_h_date_range'}})
+
+	  this.h_anchor_date_el = dateEl.createEl("span", {attr: {id:'task_finder_h_anchor_date'}})
+	  this.h_date_range_el = dateEl.createEl("span", {attr: {id:'task_finder_h_date_range'}})
 
   	  const commentEl = header.createEl("div", {attr: {id:'task_finder_h_comment'}})
-	  commentEl.createEl("span", {attr: {id:'task_finder_header_comment_tags'}})
-	  commentEl.createEl("span", {attr: {id:'task_finder_header_comment_unchecked'}})
-	  commentEl.createEl("span", {attr: {id:'task_finder_header_comment_statuses'}})
+	  this.h_comment_tags_el = commentEl.createEl("span", {attr: {id:'task_finder_header_comment_tags'}})
+	  this.h_comment_unchecked_el = commentEl.createEl("span", {attr: {id:'task_finder_header_comment_unchecked'}})
+	  this.h_comment_statuses_el = commentEl.createEl("span", {attr: {id:'task_finder_header_comment_statuses'}})
 
-	  header.createEl("span", {attr: {id:'task_finder_header_ntasks'}})
-
+	  this.h_ntasks_el = header.createEl("span", {attr: {id:'task_finder_header_ntasks'}})
   }
+
   onOpen() {
 	  this.inputEl.defaultValue = this.plugin.settings.defaultQuery
 
@@ -403,6 +406,7 @@ class TaskSuggester extends obsidian.SuggestModal {
 	  this.inputEl.setSelectionRange(0,this.inputEl.defaultValue.length)
 	  // trigger query
 	  this.onInput()
+	  this.createHeader()
   }
 
   onInput () { this.debounceonInput();}
