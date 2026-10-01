@@ -1,22 +1,20 @@
-
 .task_view_modal {
   pointer-events:none;
   margin: -2em;
 }
-.task_view_modal_suffix {
-	font-size:75%;
-	filter: brightness(70%);
+
+.task_finder {
+	padding-right:5px;
+	padding-left:5px;
 }
 
 .task_view_modal_date{
-	position:relative; /* to respect z-index*/
+	text-wrap: nowrap;
+	white-space: pre;
+	width:max-content;
 	font-size:90%;
 	float: right;
 	filter: brightness(75%);
-	text-align:right;
-	z-index:2;
-	padding-top:5px;
-	padding-right:5px
 }
 
 .task_view_modal_date[data-is-before="true"][data-checked="false"]{
@@ -29,9 +27,9 @@
 }
 
 .task_suggestion_container {
-	margin-bottom:-15px;
 	margin-left:15px;
 }
+
 
 .task_suggestion_task_container {
 	transition: .1s;
@@ -52,15 +50,14 @@
 
 .task_suggestion_header_left {
 	font-weight:bold;
-	font-size:120%;
+	font-size:115%;
 	padding-bottom:5px;
     align-items: center;
 	width: max-content;
 	margin-right:15px
 }
 .task_suggestion_header_right {
-	font-weight:bold;
-	font-size:120%;
+	font-size:100%;
 	padding-bottom:5px;
     align-items: center;
 	width: max-content;
@@ -68,37 +65,140 @@
 }
 .task_suggestion_header_center {
 	flex: 1 0 auto;
-	border-top: solid 1px var(--text-muted);
+	border-top: 1px solid var(--background-modifier-active-hover);
 	align-items: center;
 }
 
 .tasks_of_today {
 	border: 1px dashed var(--text-muted);
+	border-radius:5px;
+}
+
+.suggestion-item {
+	padding: 5px!important;
 }
 
 .suggestion-item.is-selected {
-	padding:8px 12px!important;
-	padding-bottom:8px!important;
-	background: transparent!important;*/
+	background: transparent!important;
+}
+
+
+.task_finder.suggestion-item:hover .task_suggestion_header_center {
+	border: 1px solid var(--background-modifier-active-hover);
+	background: initial;
+}
+
+
+
+
+
+
+.task_finder_item {
+	display:flex;
+	}
+
+.task_finder_item_text_container {
+	flex:1;
+	vertical-align:middle;
+	display:inline;
+}
+
+.task_finder_item_text {
+	padding-left:5px;
+	display:inline;
+	vertical-align:top;
+}
+
+.task_finder_item .task_finder_tag_icon {
+	margin-right:4px;
+	color:var(--text-on-accent);
+	display:inline-flex;
+	position:relative;
+	flex-direction:row;
+	margin-top:1px;
+	margin-bottom:auto;
+	padding:1px;
+	border-radius:4px;
+	}
+
+.task_finder_item .task_finder_tag_icon svg {
+	--icon-size:1em;
+}
+
+.task_finder_item .task_finder_tag_icon:hover {
+	outline:1px solid var(--background-modifier-active-hover);
+}
+
+
+.task_finder_item_checkbox {
+	width:15px;
+    filter:brightness(100%);
+	margin-right:20px!important;
+	display:flex;
+	margin-top:2px!important;
+	margin-bottom:auto;
+  }
+
+.task_finder_item_checkbox:hover {
+	outline:2px solid var(--text-on-accent)!important;
+}
+
+.task_finder_item_footnote {
+	display:flex;
+	font-size:75%;
+	filter: brightness(70%);
+}
+
+.task_finder_footnote_folder{
+	display:flex;
+	flex:1;
+	text-align:right;
+	justify-content:right;
+	filter: brightness(60%);
 
 }
 
 .task_finder_footnote_tag_container {
-	display:inline-block;
-	padding-left:10px;
+	display:flex;
+	padding-left:21px;
+	flex-direction:row;
+	justify-content: flex-start;
 }
+
+
+.task_finder_tag_icon_tooltip {
+	position:absolute;
+	bottom:1.5em;
+	left:50%;
+    transform: translate(-50%, 0);
+	background:var(--background-secondary);
+	border:1px solid var(--background-modifier-active-hover);
+	padding-left:4px;
+	padding-right:4px;
+	padding-top:1px;
+	padding-bottom:1px;
+	border-radius:6px;
+	z-index:10;
+}
+
 
 .task_finder_additional_text_container {
 	font-size:75%;
 	padding-bottom:5px;
-	padding-left:8ch;
+	margin-left:1ch;
+	padding-left:1ch;
+	border-left:1px solid var(--background-modifier-active-hover);
 	white-space:normal;
-	max-width:90%
+	max-width:90%;
+}
+
+.task_finder_additional_text_container:empty {
+	display:none;
 }
 
 
+/* --------------------------------------------- SETTINGS ---------------------------------------------*/
 
-/*SETTINGS*/
 .task_finder_settings_query_container {
 	margin-left:15px;
 }
@@ -133,7 +233,6 @@
 }
 
 .task_finder_modal_header {
-	border-top: 1px solid var(--background-modifier-active-hover);
 	position:inline-block;
 	font-size:var(--font-ui-smallest);
 	padding:2px;
@@ -164,3 +263,92 @@
 .task_finder_setting_add_folder {
 	background-color:var(--background-primary);
 }
+
+
+.task_finder_tag_icon_settings_row {
+	display:flex;
+	align-items:center;
+	padding:0px;
+	margin:0;
+	height:1.5em;
+	font-size: small
+	}
+
+.task_finder_tag_icon_settings_row * {
+	margin-left:5px;
+}
+.task_finder_tag_icon_settings_row > span {
+	font-size:x-small;
+	}
+
+
+/*CALLOUT*/
+
+summary::marker {
+content:""
+}
+
+details[open]::details-content {
+}
+
+.taskfinder_inline_content{
+	border-bottom-left-radius:15px;
+	border-bottom-right-radius:15px;
+	max-height: 40vh;
+    overflow: scroll;
+
+}
+
+.taskfinder_inline_block {
+	padding-bottom:5px;
+}
+
+.task_finder_callout_details{
+  background: var(--background-primary);
+  border-bottom-left-radius:15px;
+  border-bottom-right-radius:15px;
+}
+
+.task_finder_callout_summary{
+	padding-top:5px;
+	padding-bottom:5px;
+	padding-left:15px;
+	display: flex;
+	align-items: center;
+  }
+
+.task_finder_callout_details:not([open]):hover {
+	background:var(--background-modifier-active-hover);
+    border-bottom-left-radius:15px;
+    border-bottom-right-radius:15px;
+}
+
+.task_finder_callout_summary:hover {
+	background:var(--background-modifier-active-hover);
+    border-bottom-left-radius:15px;
+    border-bottom-right-radius:15px;
+
+}
+
+
+.task_finder_callout_title {
+	margin-left:15px;
+	font-weight:bold;
+}
+
+
+.task_finder_callout_summary svg[class*='lucide-'] {
+	color:var(--text-normal);
+}
+
+/*
+.task_finder_tag_icon {
+	.lucide-users {color:var(--color-red);};
+	.lucide-earth, .lucide-satellite, .lucide-briefcase-business, .lucide-database {color:var(--color-blue);};
+	.lucide-bot, .lucide-birdhouse {color:var(--color-purple);}
+	.lucide-file-check {color:var(--color-orange);};
+	.lucide-alert-triangle {color:red;};
+	.lucide-sun {color:var(--color-yellow);};
+	.question-mark-glyph {color:var(--mono-0); fill:var(--color-green);};
+}
+*/

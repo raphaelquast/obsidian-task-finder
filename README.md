@@ -57,4 +57,5 @@ inline- and/or file-tags
 
 #TODOs
 
-- [ ] Implement a caching strategy for task ptoperties
+- [ ] Implement a caching strategy for task properties
+- [ ] Deal with tasks not defined at start of line (e.g. in code-blocks or callouts or sub-tasks)
