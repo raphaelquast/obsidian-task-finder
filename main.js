@@ -944,13 +944,13 @@ class TaskSuggester extends obsidian.SuggestModal {
 		// add tags (unique set of file tags and explicit task-tags)
 		const tags = [... new Set([...match.tags?match.tags:[], ...match.file_tags?match.file_tags:[]])].sort()
 		// add tag icons
-		const tag_icons = this.plugin.settings.tagIcons.filter(ti => tags.some(t=>t.startsWith(ti[0])))
+		const tag_icons = this.plugin.settings.tagIcons.filter(ti => tags.some(t=>(t==ti[0] | t.startsWith(ti[0] + "/"))))
 
 		if (tag_icons) {
 			for ( const [use_tag, use_tag_icon, use_icon_color] of tag_icons ) {
 				// remove entry from tags array
 				// todo implement this such that tags are iterated only once
-				for (const found_tag of tags.filter(t => t.startsWith(use_tag))) {
+				for (const found_tag of tags.filter(t => (t==use_tag | t.startsWith(use_tag + "/")))) {
 					const tagidx = tags.indexOf(found_tag)
 					if (tagidx >= 0){ tags.splice(tagidx, 1)}
 
@@ -959,7 +959,7 @@ class TaskSuggester extends obsidian.SuggestModal {
 					t.style.color = use_icon_color
 
 					// indicate sub-tags with a underlined icon
-					if (found_tag != use_tag) {
+					if (found_tag.startsWith(use_tag + "/")) {
 						t.style["border-bottom"]=`1px solid ${use_icon_color}`
 					}
 
