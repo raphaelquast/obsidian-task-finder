@@ -54,7 +54,3 @@ inline- and/or file-tags
 ## Settings
 
 > TODO add description
-
-#TODOs
-
-- [ ] Implement a caching strategy for task ptoperties
