@@ -741,7 +741,6 @@ class ConfirmModal extends obsidian.Modal {
 class TaskEditModal extends obsidian.Modal {
   constructor(suggester, task, onSubmit, onDelete=null) {
     super(suggester.plugin.app);
-
 	//this.setTitle('Re-schedule task');
 	this.plugin = suggester.plugin
 	// remember modal to ensure that only a single edit-modal is open at any time
@@ -767,10 +766,9 @@ class TaskEditModal extends obsidian.Modal {
 	} else {
 	}
 
-
-	this.headerEl.innerHTML = `${this.task.init_date?this.task.init_date.format("dd, DD. MMMM YYYY"):"Unscheduled"}`
+	this.headerEl.innerHTML = this.getHeaderDateStr()
 	this.taskContainerEl = this.taskItemEl.createEl("div", {cls:"task_suggester_task_edit_entry"})
-	suggester.renderTask(task, this.taskContainerEl, Infinity, false)
+	suggester.renderTask(task, this.taskContainerEl, Infinity, false, true)
 
 	// remember initially set time string (to restore on invalid input)
 	this.taskTimeEl = this.taskContainerEl.getElementsByClassName("task_view_modal_date")[0]
@@ -926,11 +924,81 @@ class TaskEditModal extends obsidian.Modal {
 
 	// todo check how to focus the input on startup
 	this.dateInputEl.focus()
-
+	this.shouldAnimateOpen = false
 	}
 
 	onClose() {
 		this.plugin.task_edit_modal = null
+	}
+
+	getHeaderDateStr(new_date=null, new_end_date=null) {
+		let date;
+		let end_date;
+
+		if ((this.task.init_date != null) | (new_date != null)) {
+			date = new_date?new_date.format("dd, DD. MMMM YYYY"):this.task.init_date.format("dd, DD. MMMM YYYY")
+		}
+
+		if ((this.task.date_range_end != null) | (new_end_date != null)) {
+			end_date = new_end_date?new_end_date.format("dd, DD. MMMM YYYY"):this.task.date_range_end.format("dd, DD. MMMM YYYY")
+		}
+
+		let header_date_str = "";
+		if (date) {
+			if (new_date) {
+				if (new_date == "remove") {
+					header_date_str += `<mark class="task_finder_date_edit_highlight">Unscheduled</mark>`
+				} else {
+					// evaluate difference to existing date
+					let dt_txt;
+					if (this.task.init_date) {
+						const dt = this.new_date.diff(this.task.init_date, "days")
+						dt_txt = `<span class="task_finder_date_edit_change_text">(${dt>0?"+":""}${dt})</span>`
+					} else {
+						dt_txt = "(new date)"
+					}
+					header_date_str += `<mark class="task_finder_date_edit_highlight">${date}</mark> ${dt_txt}`
+				}
+			} else {
+				header_date_str += date
+			}
+
+			if ((end_date != null) & (new_date != "remove")) {
+				header_date_str += " to "
+				if (new_end_date) {
+					header_date_str += `<mark class="task_finder_date_edit_highlight">${end_date}</mark>`
+				} else {
+					header_date_str += end_date
+				}
+			}
+		} else {
+			header_date_str = "Unscheduled"
+		}
+		return header_date_str
+	}
+
+
+	getTaskTimeStr() {
+		let out = ""
+		if ((this.start_time != null) | (this.end_time != null)) {
+			if ((this.start_time != this.task.start_date?.format("HH:mm")) & (this.end_time != this.task.end_date?.format("HH:mm"))) {
+				out += `<mark class="task_finder_date_edit_highlight">${this.start_time}${this.end_time?'-'+this.end_time:''}</mark>`;
+			}
+			else if (this.start_time != this.task.start_date?.format("HH:mm")) {
+				out += `<mark class="task_finder_date_edit_highlight">${this.start_time}</mark>${this.end_time?'-'+this.end_time:''}`;
+			}
+			else if (this.end_time != this.task.end_date?.format("HH:mm")) {
+				out += `${this.start_time}${this.end_time?'-<mark class="task_finder_date_edit_highlight">'+this.end_time:''}</mark>`;
+			}
+			else {
+				out += this.init_times;
+			}
+		} else {
+			if (this.init_times) {
+				out += `<mark class="task_finder_date_edit_highlight"><del>${this.init_times}</del></mark>`;
+			}
+		}
+		return out
 	}
 
 	showInvalidInputNotice () {
@@ -952,47 +1020,17 @@ class TaskEditModal extends obsidian.Modal {
 
 
 	updateTaskPreview() {
-		console.log(this.valid_input_date, this.valid_input_start_time, this.valid_input_end_time)
 		this.toggleValidInputCls(this.valid_input_date, this.dateInputEl)
 		this.toggleValidInputCls(this.valid_input_start_time, this.startTimeInputEl)
 		this.toggleValidInputCls(this.valid_input_end_time, this.endTimeInputEl)
 
 		if (this.inputValid()) {
-			// update date
-			if (this.new_date) {
-				if (this.new_date == "remove") {
-					this.headerEl.innerHTML= `<mark class="task_finder_date_edit_highlight"><del>${this.task.init_date?this.task.init_date.format("dd, DD. MMMM YYYY"):""}</del> &emsp; Unscheduled</mark>`
-				} else {
-					let dt_txt;
-					if (this.task.init_date) {
-						const dt = this.new_date.diff(this.task.init_date, "days")
-						dt_txt = `(${dt>0?"+":""}${dt} days)`
-					} else {
-						dt_txt = "(newly scheduled)"
-					}
-					this.headerEl.innerHTML= `<mark class="task_finder_date_edit_highlight">${this.new_date.format("dd, DD. MMMM YYYY")}</mark> &emsp;${dt_txt}`
-				}
-			} else {
-				this.headerEl.innerHTML= `${this.task.init_date?this.task.init_date.format("dd, DD. MMMM YYYY"):"Unscheduled"}`
-			}
+			// update date header
+			this.headerEl.innerHTML = this.getHeaderDateStr(this.new_date, null)
 
 			// update times
-			if ((this.start_time != null) | (this.end_time != null)){
-				if ((this.start_time != this.task.start_date?.format("HH:mm")) & (this.end_time != this.task.end_date?.format("HH:mm"))) {
-					this.taskTimeEl.innerHTML = `<mark class="task_finder_date_edit_highlight">${this.start_time}${this.end_time?'-'+this.end_time:''}</mark>`;
-				}
-				else if (this.start_time != this.task.start_date?.format("HH:mm")) {
-					this.taskTimeEl.innerHTML = `<mark class="task_finder_date_edit_highlight">${this.start_time}</mark>${this.end_time?'-'+this.end_time:''}`;
-				}
-				else if (this.end_time != this.task.end_date?.format("HH:mm")) {
-					this.taskTimeEl.innerHTML = `${this.start_time}${this.end_time?'-<mark class="task_finder_date_edit_highlight">'+this.end_time:''}</mark>`;
-				}
-				else {
-					this.taskTimeEl.innerHTML = this.init_times;
-				}
-			} else {
-				this.taskTimeEl.innerHTML = `<mark class="task_finder_date_edit_highlight"></mark>`;
-			}
+			this.taskTimeEl.innerHTML = this.getTaskTimeStr()
+
 		} else {
 			this.taskTimeEl.innerHTML = this.init_times;
 			this.headerEl.innerHTML = `${this.task.init_date?this.task.init_date.format("dd, DD. MMMM YYYY"):"Unscheduled"}`
@@ -1030,6 +1068,9 @@ class TaskSuggester extends obsidian.SuggestModal {
   }
 
   setContent(taskCache) {
+	// reset today-rendered property if content changed
+	this.today_rendered = null
+
 
 	let content = Object.values(taskCache).flat(1)
 
@@ -1039,7 +1080,7 @@ class TaskSuggester extends obsidian.SuggestModal {
 	const recurrance_cutoff_duration = this.plugin.settings.recurranceCutoffDuration?moment.duration(...this.plugin.settings.recurranceCutoffDuration.split(" ")):0
 
 	for (const match of content) {
-		if (match.recurrance) {
+		if (match.date & match.recurrance) {
 			// match date is the next occurance of the repeated task!
 			const cutoff = (recurrance_cutoff_duration>0)?(match.date.clone().add(recurrance_cutoff_duration)):null;
 			for( let i=1; i<=this.plugin.settings.recurranceRepetitions; i++) {
@@ -1055,9 +1096,34 @@ class TaskSuggester extends obsidian.SuggestModal {
 				recurring_content.push(recmatch);
 			}
 		}
+
+		if (match.date_range_end) {
+			match.range_item_number = [0]
+			match.date_range_pos = "start"
+			// match date is the next occurance of the repeated task!
+			let idate = match.date.clone()
+			while (true) {
+				idate = idate.add(1, "d");
+
+				let rangematch = { ...match };
+				rangematch.date = idate.clone();
+				rangematch.range_item = true;
+				rangematch.date_range_pos = "mid"
+
+				if (idate.isSameOrAfter(match.date_range_end)) {
+					rangematch.date_range_pos = "end"
+					recurring_content.push(rangematch);
+					break
+					}
+
+				recurring_content.push(rangematch);
+			}
+		}
 	}
+	// add task-date ranges
 
 	this.content = content.concat(recurring_content).sort(sortByTime)
+
   }
 
   createHeader(el) {
@@ -1100,13 +1166,11 @@ class TaskSuggester extends obsidian.SuggestModal {
   getSuggestions(query){
 	let use_content = this.content
 
-
 	// check how to handle tasks without a date (e.g. unscheduled)
 	let unscheduled_match = query.match(/(?<=^|\s)@u#?(#\*)?(?=\s|$)/)
 	let include_unscheduled = false
 	let require_unscheduled_tags = false
 	let require_unscheduled_inline_tags = false
-
 
 	if (unscheduled_match){
 		query = query.replace(unscheduled_match[0], "")
@@ -1116,7 +1180,6 @@ class TaskSuggester extends obsidian.SuggestModal {
 		require_unscheduled_inline_tags = unscheduled_match[0] == "@u#*"
 	}
 
-
 	// check if we want to show only tasks with inline-tags
 	// (NOTE: do this after searching for @u#* to avoid issues replacing #*)
 	const require_inline_tags_match = query.match(/(?<=^|\s)#\*(?=\s|$)/)
@@ -1124,7 +1187,6 @@ class TaskSuggester extends obsidian.SuggestModal {
 	if (require_inline_tags_match) {
 		query = query.replace(require_inline_tags_match[0], "")
 	}
-
 
 	// check if anchor-date is set
 	const datematch = query.match(/(?<=^|\s)(?:@)(\d{8}|\d{4}|\d{2}|\d)?(?=\s|$)/)
@@ -1150,21 +1212,33 @@ class TaskSuggester extends obsidian.SuggestModal {
 	}
 
 	// check if date-range is set
-	const rangematch = query.match(/(?<=^|\s)([+-]?[+-])(\d*)?([dwmy])?(?=\s|$)/)
-	let rangestr, direction, value, unit;
-	if ( rangematch ) {
-		[rangestr, direction, value, unit] = rangematch
-		query = query.replace(rangestr, "")
-	}
+	const rangematch = query.match(/(?<=^|\s)(([+-])(\d*)?([dwmy])?)(([+-])(\d*)?([dwmy])?)?(?=\s|$)/)
+	let rangestr, rangestr0, direction0, unit0, value0, rangestr1, direction1, unit1, value1;
+	let direction, value, unit;
 
-	if ( direction ) {
+	if ( rangematch ) {
+		[rangestr, rangestr0, direction0, value0, unit0, rangestr1, direction1, value1, unit1] = rangematch
+		query = query.replace(rangestr, "")
+
+		// only define if we have a positive range-match to show all tasks on queries without range-indications
 		startvalue = now.clone().startOf("day");
 		endvalue = now.clone().endOf("day");
 
-		// treat lower-case "m" as Month ("M")
-		if ( !unit ) {unit = "d"} else if ( unit == "m" ) { unit = "M" }
-		if (direction.includes("-")) { startvalue = (value)?now.clone().startOf("day").subtract(value, unit):null; }
-		if (direction.includes("+")) { endvalue = (value)?now.clone().endOf("day").add(value, unit):null; }
+	}
+
+	// allow definition of symmetric ranges via +-(value)(unit)
+	if ((direction0 != null) & (direction1 != null) & (value0 == null) & (unit0 == null)) {
+		value0 = value1
+		unit0 = unit1
+	}
+
+	for ([direction, unit, value] of [[direction0, unit0, value0], [direction1, unit1, value1]]) {
+		if ( direction ) {
+			// treat lower-case "m" as Month ("M")
+			if ( !unit ) {unit = "d"} else if ( unit == "m" ) { unit = "M" }
+			if (direction.includes("-")) { startvalue = (value)?now.clone().startOf("day").subtract(value, unit):null; }
+			if (direction.includes("+")) { endvalue = (value)?now.clone().endOf("day").add(value, unit):null; }
+		}
 	}
 
 	const show_scheduled = ((datematch?true:false) | (rangematch?true:false)) | !include_unscheduled
@@ -1465,11 +1539,13 @@ class TaskSuggester extends obsidian.SuggestModal {
   };
 
 
-  addTaskIcon(el, icon, color, tag=null, tooltip=null) {
+  addTaskIcon(el, icon, color=null, tag=null, tooltip=null) {
 	const t = el.createEl('div', {cls:"task_finder_tag_icon"})
 	obsidian.setIcon(t, icon)
 	// set color on svg to avoid altering the text-color of the tooltip
-	t.querySelectorAll('svg').forEach(element => {element.style.color = color})
+	if (color) {
+		t.querySelectorAll('svg').forEach(element => {element.style.color = color})
+	}
 
 	// add tooltip on hover over icon
  	if (tag) {
@@ -1660,10 +1736,13 @@ class TaskSuggester extends obsidian.SuggestModal {
 	return `${task.recurrance.str}` + (indicate_nth_repetition?(use_value>0?` (${use_value})`:''):'')
   }
 
-  renderTask(match, el, additional_text_clip=4, print_today_duration=true) {
+  renderTask(match, el, additional_text_clip=4, print_today_duration=true, always_show_checkbox=false) {
   		const taskContainerEl = el.createEl('div', {cls:'task_suggestion_container'});
 		if (match.recurring_item) {
 			taskContainerEl.className = "task_suggestion_container task_finder_recurring_item"
+		}
+		if (match.range_item) {
+			taskContainerEl.className = "task_suggestion_container task_finder_range_item"
 		}
 
 
@@ -1673,15 +1752,8 @@ class TaskSuggester extends obsidian.SuggestModal {
 		const taskdiv = taskContainerEl.createEl('div', {cls:'task_suggestion_task_container'});
 		const txtdiv = taskdiv.createEl('div', {cls:'task_finder_item'});
 
-		if (!match.recurrance){
-			const i = txtdiv.createEl('input', {cls:'task_finder_item_checkbox', type: 'checkbox', 'data-task':`*`});
-			i.addEventListener("click", this.toggleTask(this, match, i))
-			i.setAttribute("data-task", `${match.task_status}`)
 
-			if (`${match.task_status}` != " ") {
-				i.setAttribute("checked", true)
-			}
-		} else {
+		if ((match.recurrance != null) & (!always_show_checkbox)) {
 			// add recurrance icon instead of checkbox
 			// TODO handle action if recurring item is checked?
 			const t = this.addTaskIcon(
@@ -1692,8 +1764,38 @@ class TaskSuggester extends obsidian.SuggestModal {
 				this.getRecurranceStr(match)
 				)
 			t.className += " task_finder_item_checkbox task_finder_recurrance_icon"
+		} else if ((match.date_range_end != null) & (!always_show_checkbox)) {
+			// add date-range icons
+			let date_range_icon;
+			if (match.date_range_pos == "start") {
+				date_range_icon = "lucide-arrow-down-from-line"
+			} else if (match.date_range_pos == "end") {
+				date_range_icon = "lucide-arrow-up-from-line"
+			} else {
+				date_range_icon = "lucide-ellipsis-vertical"
+			}
+
+			const t = this.addTaskIcon(
+				txtdiv,
+				date_range_icon,
+				null,
+				null,
+				null
+				)
+			t.className += " task_finder_item_checkbox task_finder_range_item_icon"
+			t.className += ` task_finder_item_checkbox task_finder_range_item_icon_${match.range_item_number[0]}`
+
+		} else {
+			const i = txtdiv.createEl('input', {cls:'task_finder_item_checkbox', type: 'checkbox', 'data-task':`*`});
+			i.addEventListener("click", this.toggleTask(this, match, i))
+			i.setAttribute("data-task", `${match.task_status}`)
+
+			if (`${match.task_status}` != " ") {
+				i.setAttribute("checked", true)
+			}
 
 		}
+
 
 		const tasktextEl = txtdiv.createEl('div', {cls:'task_finder_item_text_container'});
 		// open openTaskEditor modal if task is clicked
@@ -1777,14 +1879,12 @@ class TaskSuggester extends obsidian.SuggestModal {
 			dt.setAttribute("data-is-before", match.date.isBefore())
 			dt.setAttribute("data-checked", match.meta.task == "x")
 		}
-  }
 
-  // Renders each suggestion item.
-  renderSuggestion(matches, el) {
-	let [grp, grp_matches] = matches
+		return taskContainerEl
+	}
 
-	// define monthly (sticky) headers
-	const grplabel = grp?`${grp.format("MMMM YYYY")}`:"Unscheduled"
+  getStickyHeader(el, date=null) {
+	const grplabel = date?`${date.format("MMMM YYYY")}`:"Unscheduled"
 	const grpheaderid = `taskfinder_header_${grplabel}_${this.uuid}`
 	const grpcontainerid = `taskfinder_container_${grplabel}_${this.uuid}`
 
@@ -1796,10 +1896,35 @@ class TaskSuggester extends obsidian.SuggestModal {
 	} else {
 		grpcontainerEl = document.getElementById(grpcontainerid)
 	}
+	return grpcontainerEl
 
-	el = grpcontainerEl.createEl("div")
+  }
+
+  // Renders each suggestion item.
+  renderSuggestion(matches, el) {
+	let [grp, grp_matches] = matches
 
 
+	// create a dummy today entry if no tasks for today have been defined
+	// TODO avoid duplication of code in here...
+	if (!this.today_rendered){
+		if (grp.isAfter(moment())){
+
+			const dummyel = this.getStickyHeader(el, moment()).createEl("div", {cls:"tasks_of_today"})
+			const todaydiv = dummyel.createEl('div', {cls: 'task_suggestion_header'});
+			todaydiv.createEl('div', {cls: 'task_suggestion_header_left', text: " " + moment().format("dd, DD")});
+			todaydiv.createEl('div', {cls: 'task_suggestion_header_center'});
+			todaydiv.createEl('div', {cls: 'task_suggestion_header_right', text: "today "});
+			const dummytextEl = dummyel.createEl('div', {cls: 'task_finder_today_dummy_entry'})
+			this.addTaskIcon(dummytextEl, "lucide-tent-tree", null, null, "Nice... nothing to do today!")
+
+			this.today_rendered = true
+		}
+	}
+
+
+	// define monthly (sticky) headers
+	el = this.getStickyHeader(el, grp).createEl("div")
 
 	let header_txt = "???"
 	let header_txt_right = "???"
@@ -1822,7 +1947,10 @@ class TaskSuggester extends obsidian.SuggestModal {
 		}
 
 		// add class suffix to tasks of today
-		el.className = el.className + ((is_today)?' tasks_of_today':'')
+		if (is_today){
+			el.className = el.className + ' tasks_of_today'
+			this.today_rendered = true
+		}
 	} else {
 		header_txt = grp
 		header_txt_right = ""
@@ -1833,8 +1961,33 @@ class TaskSuggester extends obsidian.SuggestModal {
 	const daydiv1 = header.createEl('div', {cls: 'task_suggestion_header_center'});
 	const daydiv2 = header.createEl('div', {cls: 'task_suggestion_header_right', text: header_txt_right});
 
+	// count number of range-items in the group
+	let n_range_items = 0
+
+	let range_start_items = []
 	for (const match of grp_matches){
-		this.renderTask(match, el)
+		if (match.date_range_end) {
+			n_range_items += 1
+			}
+
+		// delay rendering of the first item of a range so we can assign
+		// the "range-number" (e.g. the number of simultaneous range-items in a group)
+		// before rendering.
+		// The number is inherited by all members of a range-item group!
+		if (match.date_range_pos == "start") {
+			range_start_items.push(match)
+		} else {
+			this.renderTask(match, el)
+		}
+
+	}
+
+	// render range-start items
+	// (subtract number of "start items" in reverse to handle case where multiple ranges start at the same day
+	for (let nstart = 0; nstart < range_start_items.length; nstart++) {
+		const match = range_start_items[nstart];
+		match.range_item_number[0] = (n_range_items - range_start_items.length + nstart)
+		const itemEl = this.renderTask(match, el)
 	}
 
   };
@@ -1896,6 +2049,9 @@ function getTaskCache(plugin, checked='all') {
 }
 
 async function getTasks(plugin, checked='all') {
+
+	const daily_note_date_fmt_regex = new RegExp(plugin.settings.dailyNoteFilenameFmt.replaceAll(/[YMD]/g, "\\d"))
+
 	const task_file_cache = getTaskCache(plugin, checked)
 	// remove all hashes that no longer exist in the cache (deleted/changed files)
 	const current_file_hashes = Object.values(task_file_cache).map((a)=> a[2])
@@ -1933,34 +2089,41 @@ async function getTasks(plugin, checked='all') {
 			let tasktext = full_text
 			let task_match = tasktext.match(/- \[(.)\] /)
 
-
 			if ( task_match ) {
 				const task_status = task_match[1];
+				// strip off task-prefix (e.g. "- [x] ")
 				tasktext = tasktext.slice(task_match.index + 6)
+				// try to find date (and optional date-range) assigned to task
+				let datematch = tasktext.match(/(?<=^|\s)([📅⏳🛫]) (\d\d\d\d-\d\d-\d\d)(?: - (\d\d\d\d-\d\d-\d\d))?(?=\s|$)/u)
 
-				// try to find date assigned to task
-				let datestr = tasktext.match(/[📅⏳🛫] \d\d\d\d-\d\d-\d\d/gu);
-
+				let datestr
 				let date;
+				let date_range_end;
 				let start_time;
 				let start_date;
 				let end_time;
 				let end_date;
 				let datesource;
+				let dateicon;
 
-				if ( datestr ) {
-					// TODO allow multiple dates in task-text
-					[datesource, date] = datestr[0].split(" ")
-					datesource = tasks_iconnames[datesource]
-					tasktext = tasktext.replace(datestr[0], "")
+				if ( datematch ) {
+					[datestr, dateicon, date, date_range_end] = datematch
+					date = moment(date)
+					date_range_end = date_range_end?moment(date_range_end):null
+
+					datesource = tasks_iconnames[dateicon]
+					tasktext = tasktext.replace(datestr, "")
 				} else {
 					// check if task is defined in a note whose title starts with a date
-					const fname = path.split("/").slice(-1)[0].slice(0,-3)
-					date = fname.match(/^\d\d\d\d-\d\d-\d\d/)
-					if ( date ) {
-						date = date[0]
-						datesource = "daily_note"
+					const fname = path.split("/").slice(-1)[0].split(".")[0]
+
+					date = moment(fname, plugin.settings.dailyNoteFilenameFmt, true);
+					if ( date.isValid() ) {
+						datesource = "daily_note";
+					} else {
+						date = null;
 					}
+
 				}
 
 				// parse recurrance
@@ -2016,17 +2179,16 @@ async function getTasks(plugin, checked='all') {
 				let recurr_n;
 				let init_date;
 				if ( date ) {
+
 					// TODO allow dates anywhere?
-					const datematch = tasktext.match(/^(\d?\d:\d\d)(?: - )?(\d?\d:\d\d)?/)
+					const timematch = tasktext.match(/^(\d?\d:\d\d)(?: - )?(\d?\d:\d\d)?/)
 					let found_datestr, start_time, end_time;
 
-					if ( datematch ){
-						[found_datestr, start_time, end_time] = datematch
+					if ( timematch ){
+						[found_datestr, start_time, end_time] = timematch
 						// strip off found time string from tasktext
 						tasktext = tasktext.replace(found_datestr, "")
 					}
-
-					date = moment(date)
 
 					// handle recurrance
 					init_date = date.clone()
@@ -2068,6 +2230,7 @@ async function getTasks(plugin, checked='all') {
 					text:tasktext,
 					task_status:task_status,
 					date:date,
+					date_range_end:date_range_end,
 					init_date:init_date,
 					start_date:start_date,
 					end_date:end_date,
