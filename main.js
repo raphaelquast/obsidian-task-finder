@@ -907,7 +907,6 @@ class TaskDeletionConfirmModal extends ConfirmModal {
 
 		async function do_delete_task(event) {
 			await suggester.removeTaskFromFile(suggester.plugin, task)
-			await refreshTaskCache(suggester.plugin);
 			await suggester.setContent(suggester.plugin.taskCache)
 			// to update "search Modals"
 			suggester.inputEl.dispatchEvent(new Event('input', {bubbles:true}))
@@ -2256,7 +2255,6 @@ class TaskSuggester extends obsidian.SuggestModal {
 			priority
 			)
 		//await delay(200);  // TODO check why this is necessary!!
-		await refreshTaskCache(this.plugin);
 		await this.setContent(this.plugin.taskCache)
 		// to update "search Modals"
 
@@ -2282,7 +2280,6 @@ class TaskSuggester extends obsidian.SuggestModal {
 		async (new_date, start_time, end_time, new_end_date, priority)=>{
 			await this.updateTaskDateInFile(plugin, task, new_date, start_time, end_time, new_end_date, priority)
 			//await delay(200);  // TODO check why this is necessary!!
-			await refreshTaskCache(plugin);
 			await this.setContent(plugin.taskCache)
 			// to update "search Modals"
 			this.inputEl.dispatchEvent(new Event('input', {bubbles:true}))
@@ -3272,28 +3269,25 @@ function refreshAutocomplete(plugin, content) {
 }
 
 async function refreshTaskCache(plugin) {
-	if (plugin.refresh_cache == true) {
-		plugin.refresh_cache = false
-		let note;
-		if (plugin.settings.showCacheRefreshMessage){
-			note = new obsidian.Notice('refreshing cache...');
+	let note;
+	// if (plugin.settings.showCacheRefreshMessage){
+		// note = new obsidian.Notice('refreshing cache...');
+	// };
+
+	const startTime = performance.now();
+	const number_of_updated_files = await getTasks(plugin, checked=plugin.settings.includeStatus)
+	refreshAutocomplete(plugin, plugin.taskCache)
+	const endTime = performance.now()
+
+	if (plugin.settings.showCacheRefreshMessage && number_of_updated_files.length > 0) {
+		let msg = "";
+		if (number_of_updated_files.length > 3) {
+			msg = `TaskFinder: Refreshed task-cache of ${number_of_updated_files.length} files in (${((endTime - startTime)/1000).toFixed(2)}s)$.`;
+		} else {
+			msg = "TaskFinder: Refreshed task-cache for:\n  - " + number_of_updated_files.join("\n  - ");
 		};
-
-		const startTime = performance.now();
-		const number_of_updated_files = await getTasks(plugin, checked=plugin.settings.includeStatus)
-		refreshAutocomplete(plugin, plugin.taskCache)
-		const endTime = performance.now()
-
-		if (plugin.settings.showCacheRefreshMessage && number_of_updated_files.length > 0) {
-			let msg = "";
-			if (number_of_updated_files.length > 3) {
-				msg = `TaskFinder: Refreshed task-cache of ${number_of_updated_files.length} files in (${((endTime - startTime)/1000).toFixed(2)}s)$.`;
-			} else {
-				msg = "TaskFinder: Refreshed task-cache for:\n  - " + number_of_updated_files.join("\n  - ");
-			};
-			note.hide();
-			new obsidian.Notice(msg);
-		}
+		//note.hide();
+		new obsidian.Notice(msg);
 	}
 }
 
@@ -3316,7 +3310,6 @@ function getUpdateTaskContentProcessor(task, txt) {
 
 
 async function renderSuggesterQueryResult(plugin, el, query) {
-	await refreshTaskCache(plugin);
 	const ts = new TaskSuggester(plugin, plugin.taskCache)
 	if (plugin.settings.showHeader) {
 		ts.createHeader(el)
@@ -3368,7 +3361,6 @@ class TaskFinderView extends obsidian.ItemView {
 	getDisplayText() {return VIEW_NAME;}
 
 	async renderSuggesterQueryResult(suggester, el, query) {
-		await refreshTaskCache(suggester.plugin);
 		await suggester.setContent(suggester.plugin.taskCache)
 
 		el.empty();
@@ -3426,7 +3418,10 @@ class TaskFinderView extends obsidian.ItemView {
 			})
 
 		// connect update triggers
-		app.metadataCache.on('resolved', () => {this.reRenderSuggestions()})
+		app.metadataCache.on('resolved', async () => {
+			await refreshTaskCache(this.plugin)
+			this.reRenderSuggestions()
+			})
 
 		// periodically update view to show correct times
 		if (this.plugin.settings.viewUpdateInterval > 0) {
@@ -3486,13 +3481,11 @@ class TaskFinder extends obsidian.Plugin {
 		this.allQueryStatuses = [];
 		this.allQueryFolders = [];
 
-		this.refresh_cache = true
-
 		await this.loadSettings();
 		this.addSettingTab(new SettingTab(this.app, this));
 
-		app.metadataCache.on('resolved', async (file, data, cache) => {
-			this.refresh_cache = true
+		app.metadataCache.on('resolved', () => {
+			refreshTaskCache(this)
 		})
 
 		this.addCommand({
@@ -3501,7 +3494,6 @@ class TaskFinder extends obsidian.Plugin {
 		  callback: () => {
 			//IIFE pattern to allow async call here
 			(async () => {
-				await refreshTaskCache(this);
 				new TaskSuggester(this, this.taskCache).open();
 				})();
 		}})
@@ -3543,7 +3535,6 @@ class TaskFinder extends obsidian.Plugin {
 				return (async (event) => {
 					if (event.target.open) {
 						container.empty()
-						await refreshTaskCache(plugin);
 
 						const ts = new TaskSuggester(plugin, plugin.taskCache)
 						ts.codeBlockEl = detailsEl
@@ -3595,7 +3586,6 @@ class TaskFinder extends obsidian.Plugin {
 	async saveData(data) {
 		// refresh cache whenever new settings are written
 		// (override saveData to implement it also for builtin settings types)
-		this.refresh_cache = true
 		await super.saveData(data)
 
 		// re-trigger time interval for leaf-re-rendering
