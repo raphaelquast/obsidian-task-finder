@@ -1446,7 +1446,7 @@ class TaskEditModal extends obsidian.Modal {
 
 
 class TaskSuggester extends obsidian.SuggestModal {
-	constructor(plugin, taskCache) {
+	constructor(plugin) {
 		super(plugin.app)
 		this.plugin = plugin
 
@@ -1456,7 +1456,7 @@ class TaskSuggester extends obsidian.SuggestModal {
 
 		this.uuid = crypto.randomUUID()
 
-		this.setContent(taskCache)
+		this.setContent(plugin.taskCache)
 
 		this.debounceonInput = obsidian.debounce(() => { super.onInput(); }, this.plugin.settings.queryDebounceTime, true)
 		this.emptyStateText = "Oh nice... seems like there's nothing to do!"
@@ -1480,7 +1480,8 @@ class TaskSuggester extends obsidian.SuggestModal {
 			this.queryDropdown.selectEl.blur();
 			this.queryDropdown.setValue("~?x")
 			this.inputEl.value = this.queryDropdown.getValue() + " "
-			this.inputEl.dispatchEvent(new Event('input', {bubbles:true}))
+
+			//this.inputEl.dispatchEvent(new Event('input', {bubbles:true}))
 		}, 0);
 
 		this.inputEl.before(dropdowndivEl)
@@ -1500,7 +1501,6 @@ class TaskSuggester extends obsidian.SuggestModal {
   setContent(taskCache) {
 	// reset today-rendered property if content changed
 	this.today_rendered = null
-
 
 	let content = Object.values(taskCache).flat(1)
 
@@ -3309,10 +3309,6 @@ function refreshAutocomplete(plugin, content) {
 }
 
 async function refreshTaskCache(plugin) {
-	let note;
-	// if (plugin.settings.showCacheRefreshMessage){
-		// note = new obsidian.Notice('refreshing cache...');
-	// };
 
 	const startTime = performance.now();
 	const number_of_updated_files = await getTasks(plugin, checked=plugin.settings.includeStatus)
@@ -3326,8 +3322,11 @@ async function refreshTaskCache(plugin) {
 		} else {
 			msg = "TaskFinder: Refreshed task-cache for:\n  - " + number_of_updated_files.join("\n  - ");
 		};
-		//note.hide();
-		new obsidian.Notice(msg);
+		if (plugin.refresh_notice) {
+			plugin.refresh_notice.hide()
+		}
+
+		plugin.refresh_notice = new obsidian.Notice(msg);
 	}
 }
 
@@ -3350,7 +3349,7 @@ function getUpdateTaskContentProcessor(task, txt) {
 
 
 async function renderSuggesterQueryResult(plugin, el, query) {
-	const ts = new TaskSuggester(plugin, plugin.taskCache)
+	const ts = new TaskSuggester(plugin)
 	if (plugin.settings.showHeader) {
 		ts.createHeader(el)
 	}
@@ -3394,24 +3393,27 @@ class TaskFinderView extends obsidian.ItemView {
 		this.plugin = plugin
 		this.icon = "search-check"
 
-		this.suggester = new TaskSuggester(plugin, plugin.taskCache)
+		this.suggester = new TaskSuggester(plugin)
 	}
 
 	getViewType() {return VIEW_NAME;}
 	getDisplayText() {return VIEW_NAME;}
 
 	async renderSuggesterQueryResult(suggester, el, query) {
-		await suggester.setContent(suggester.plugin.taskCache)
+		refreshTaskCache(suggester.plugin).then((value) => {
+			suggester.setContent(suggester.plugin.taskCache)
 
-		el.empty();
-		for (const sug of suggester.getSuggestions(query)){
-			const taskcontainer = el.createEl("div", {cls:"task_finder suggestion-item"})
-			await suggester.renderSuggestion(sug, taskcontainer)
-		};
+			el.empty();
+			for (const sug of suggester.getSuggestions(query)){
+				const taskcontainer = el.createEl("div", {cls:"task_finder suggestion-item"})
+				suggester.renderSuggestion(sug, taskcontainer)
+			};
+		})
 	}
 
 
 	async onOpen() {
+
 		this.contentEl.empty()
 		this.contentEl.className = "taskfinder_view_content"
 
@@ -3430,11 +3432,9 @@ class TaskFinderView extends obsidian.ItemView {
 			this.queryDropdown.selectEl.selectedIndex=-1;
 		});
 
-
-
 		this.queryInput = new obsidian.SearchComponent(this.inputContainerEl)
 		this.inputEl = this.queryInput.inputEl
-
+		this.inputEl.value = this.queryDropdown.getValue()
 		// replace inputEl of suggester so it reacts to input-event triggers
 		this.suggester.inputEl = this.inputEl
 
@@ -3459,14 +3459,16 @@ class TaskFinderView extends obsidian.ItemView {
 
 		// connect update triggers
 		app.metadataCache.on('resolved', async () => {
-			await refreshTaskCache(this.plugin)
-			this.reRenderSuggestions()
+			refreshTaskCache(this.plugin).then(()=>{this.reRenderSuggestions()})
 			})
 
 		// periodically update view to show correct times
 		if (this.plugin.settings.viewUpdateInterval > 0) {
 			this.triggerPeriodicUpdates()
 		}
+
+		refreshTaskCache(this.plugin).then(()=>{this.reRenderSuggestions()})
+
     }
 
 	async reRenderSuggestions () {
@@ -3524,9 +3526,9 @@ class TaskFinder extends obsidian.Plugin {
 		await this.loadSettings();
 		this.addSettingTab(new SettingTab(this.app, this));
 
-		app.metadataCache.on('resolved', () => {
-			refreshTaskCache(this)
-		})
+		// app.metadataCache.on('resolved', () => {
+			// refreshTaskCache(this)
+		// })
 
 		this.addCommand({
 		  id: 'find-tasks',
@@ -3534,7 +3536,7 @@ class TaskFinder extends obsidian.Plugin {
 		  callback: () => {
 			//IIFE pattern to allow async call here
 			(async () => {
-				new TaskSuggester(this, this.taskCache).open();
+				new TaskSuggester(this).open();
 				})();
 		}})
 
@@ -3546,7 +3548,6 @@ class TaskFinder extends obsidian.Plugin {
 		  VIEW_NAME,
 		  (leaf) => new TaskFinderView(this, leaf)
 		);
-/*
 		this.codeBLockProcessor = this.registerMarkdownCodeBlockProcessor('taskfinder', (source, el, ctx) => {
 		    const rows = source.split('\n');
 			let header, query, options;
@@ -3557,7 +3558,6 @@ class TaskFinder extends obsidian.Plugin {
 			}
 
 			[query, header, options] = rows;
-
 			el.empty();
 			el.className = "taskfinder_inline_block"
 			const detailsEl = el.createEl("details", {cls:"task_finder_callout_details"})
@@ -3567,31 +3567,39 @@ class TaskFinder extends obsidian.Plugin {
 			const container = detailsEl.createEl("div", {cls: "taskfinder_inline_content"})
 
 			detailsEl.open = (options && options.includes("open"))?true:false
-
 			// callback to trigger fetching tasks and render results
-			function getCallback (plugin) {
+			function getCallback (plugin, detailsEl, container, query) {
 				 //IIFE pattern to allow async call here´
-
 				return (async (event) => {
-					if (event.target.open) {
-						container.empty()
+					if (detailsEl.open) {
+						refreshTaskCache(plugin).then(()=>{
+							container.empty()
 
-						const ts = new TaskSuggester(plugin, plugin.taskCache)
-						ts.codeBlockEl = detailsEl
-						// to allow dynamic-re fetching by triggering the 'input' event on the inputEl
-						ts.inputEl.value = query
-						if (plugin.settings.showHeader) {
-							ts.createHeader(container)
-						}
-						for (const sug of ts.getSuggestions(query)){
-							const taskcontainer = container.createEl("div", {cls:"task_finder suggestion-item"})
-							ts.renderSuggestion(sug, taskcontainer)
-						};
-					}
-			});
+							const ts = new TaskSuggester(plugin)
+							ts.codeBlockEl = detailsEl
+							// to allow dynamic-re fetching by triggering the 'input' event on the inputEl
+							ts.inputEl.value = query
+
+							if (plugin.settings.showHeader) {
+								ts.createHeader(container)
+							}
+
+							for (const sug of ts.getSuggestions(query)){
+								const taskcontainer = container.createEl("div", {cls:"task_finder suggestion-item"})
+								ts.renderSuggestion(sug, taskcontainer)
+
+							};
+						});
+					};
+				});
 			};
-			detailsEl.addEventListener("toggle", getCallback(this))
-		}) */;
+			detailsEl.addEventListener("toggle", getCallback(this, detailsEl, container, query))
+
+			app.metadataCache.on('resolved', getCallback(this, detailsEl, container, query))
+
+		});
+
+
 	}
 
 	async activateView() {
