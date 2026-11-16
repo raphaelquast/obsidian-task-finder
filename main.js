@@ -2679,13 +2679,8 @@ class TaskSuggester extends obsidian.SuggestModal {
 			if (match.subtasks && match.subtasks.length > 0) {
 
 				if (this.plugin.settings.expandSubTasks) {
-					taskContainerEl.classList.add("show_subtasks")
-				}
-
-				subtaskbuttonEl.addEventListener("click", () => {
-					taskContainerEl.classList.toggle("show_subtasks");
-					})
-
+					subtaskContainerEl.classList.add("show_subtasks")
+				} else {
 
 				subtaskbuttonEl.addEventListener("mouseenter", () => {
 					subtaskContainerEl.classList.add("show_subtasks");
@@ -2694,6 +2689,12 @@ class TaskSuggester extends obsidian.SuggestModal {
 				taskContainerEl.addEventListener("mouseleave", () => {
 					subtaskContainerEl.classList.remove("show_subtasks");
 					})
+				}
+
+				subtaskbuttonEl.addEventListener("click", () => {
+					subtaskContainerEl.classList.toggle("show_subtasks");
+					})
+
 
 			}
 		}
