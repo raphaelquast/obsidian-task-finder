@@ -16,11 +16,11 @@ A command: `Task Finder: Find Tasks` to query all tasks in your vault based on d
 
 ## Query Language
 
-### Filter Dates
+### Dates
 
 Examples:  
 
-- `+-2w`: Show all tasks scheduled between 2 weeks before and after today.
+- `+-2w`: Show all tasks scheduled 2 weeks before and after today.
 - `+`: Show all future tasks.
 
 Set anchor-date `@...`
@@ -42,15 +42,23 @@ Set date-range: `(direction)(duration)(unit)`
     - `y` for years
 
 
-### Filter Tags
-inline- and/or file-tags 
+### Tags
+Examples:  
 
-### Filter Text
+- `#my_tag`: Include only tasks with the tag #my_tag
+- `~#my_tag`: Include only tasks without the tag #my_tag
+
+### Task Status
+
+Examples:
+
+- `?x`: show only checked tasks (`- [x]`)
+- `~?x`: show only unchecked tasks (`- [ ]` or custom task-statuses)
+- `~?n`: show only tasks with the custom status `- [n]` 
 
 
-## How does it work?
+### Path
 
+Examples:
 
-## Settings
-
-> TODO add description
+- `$Path/To/My/Folder`: show only tasks defined in notes within the folder "Path/To/My/Folder"
