@@ -145,55 +145,9 @@
 	color:var(--text-normal)
 }
 
-
 .task_finder_recurrance_icon svg {
 	color: var(--text-muted)!important;
   }
-
-.task_finder_range_item_icon_0 svg { color: var(--text-muted);}
-.taskfinder_view_container:has(.task_finder_range_item_icon_0:hover) .task_finder_range_item_icon_0,
-.taskfinder_inline_block:has(.task_finder_range_item_icon_0:hover) .task_finder_range_item_icon_0,
-.prompt-results:has(.task_finder_range_item_icon_0:hover) .task_finder_range_item_icon_0 { outline:1px solid var(--text-muted)!important; }
-
-.task_finder_range_item_icon_1 svg { color: var(--color-pink);}
-.taskfinder_view_container:has(.task_finder_range_item_icon_1:hover) .task_finder_range_item_icon_1,
-.taskfinder_inline_block:has(.task_finder_range_item_icon_1:hover) .task_finder_range_item_icon_1,
-.prompt-results:has(.task_finder_range_item_icon_1:hover) .task_finder_range_item_icon_1 { outline:1px solid var(--color-pink)!important; }
-
-.task_finder_range_item_icon_2 svg { color: var(--color-cyan);}
-.taskfinder_view_container:has(.task_finder_range_item_icon_2:hover) .task_finder_range_item_icon_2,
-.taskfinder_inline_block:has(.task_finder_range_item_icon_2:hover) .task_finder_range_item_icon_2,
-.prompt-results:has(.task_finder_range_item_icon_2:hover) .task_finder_range_item_icon_2 { outline:1px solid var(--color-cyan)!important; }
-
-.task_finder_range_item_icon_3 svg { color: var(--color-yellow);}
-.taskfinder_view_container:has(.task_finder_range_item_icon_3:hover) .task_finder_range_item_icon_3,
-.taskfinder_inline_block:has(.task_finder_range_item_icon_3:hover) .task_finder_range_item_icon_3,
-.prompt-results:has(.task_finder_range_item_icon_3:hover) .task_finder_range_item_icon_3 { outline:1px solid var(--color-yellow)!important; }
-
-.task_finder_range_item_icon_4 svg { color: var(--color-purple);}
-.taskfinder_view_container:has(.task_finder_range_item_icon_4:hover) .task_finder_range_item_icon_4,
-.taskfinder_inline_block:has(.task_finder_range_item_icon_4:hover) .task_finder_range_item_icon_4,
-.prompt-results:has(.task_finder_range_item_icon_4:hover) .task_finder_range_item_icon_4 { outline:1px solid var(--color-purple)!important; }
-
-.task_finder_range_item_icon_5 svg { color: var(--color-blue);}
-.taskfinder_view_container:has(.task_finder_range_item_icon_5:hover) .task_finder_range_item_icon_5,
-.taskfinder_inline_block:has(.task_finder_range_item_icon_5:hover) .task_finder_range_item_icon_5,
-.prompt-results:has(.task_finder_range_item_icon_5:hover) .task_finder_range_item_icon_5 { outline:1px solid var(--color-blue)!important; }
-
-.task_finder_range_item_icon_6 svg { color: var(--color-orange);}
-.taskfinder_view_container:has(.task_finder_range_item_icon_6:hover) .task_finder_range_item_icon_6,
-.taskfinder_inline_block:has(.task_finder_range_item_icon_6:hover) .task_finder_range_item_icon_6,
-.prompt-results:has(.task_finder_range_item_icon_6:hover) .task_finder_range_item_icon_6 { outline:1px solid var(--color-orange)!important; }
-
-.task_finder_range_item_icon_7 svg { color: var(--color-red);}
-.taskfinder_view_container:has(.task_finder_range_item_icon_7:hover) .task_finder_range_item_icon_7,
-.taskfinder_inline_block:has(.task_finder_range_item_icon_7:hover) .task_finder_range_item_icon_7,
-.prompt-results:has(.task_finder_range_item_icon_7:hover) .task_finder_range_item_icon_7 { outline:1px solid var(--color-red)!important; }
-
-.task_finder_range_item_icon_8 svg { color: var(--color-green);}
-.taskfinder_view_container:has(.task_finder_range_item_icon_8:hover) .task_finder_range_item_icon_8,
-.taskfinder_inline_block:has(.task_finder_range_item_icon_8:hover) .task_finder_range_item_icon_8,
-.prompt-results:has(.task_finder_range_item_icon_8:hover) .task_finder_range_item_icon_8 { outline:1px solid var(--color-green)!important; }
 
 .task_finder_item .task_finder_tag_icon {
 	margin-right:4px;
@@ -243,7 +197,7 @@
 
 
 
-.task_finder_item_checkbox:hover {
+.task_finder_item_checkbox:not(.task_finder_range_item):hover {
 	outline:2px solid var(--text-on-accent)!important;
 }
 
@@ -275,7 +229,9 @@
 	background:var(--background-primary)
 }
 
-.taskfinder_tooltip:has(.taskfinder_tooltip_prefix:not(:empty))  {
+.taskfinder_tooltip_prefix {
+	display:inline-flex;
+	flex-direction:column;
 	padding:5px;
 }
 
@@ -325,11 +281,11 @@
 	border-top:1px solid var(--background-modifier-border);
 }
 
-
 .task_suggestion_container {
   --subtask-border-color: var(--background-modifier-active-hover);
 }
-.task_suggestion_container:has(.subtask):hover{
+
+.task_suggestion_container.subtask:hover{
   --subtask-border-color: var(--text-muted);
   transition:all 1s ease-out;
 }
@@ -646,8 +602,6 @@
 	border:1px solid var(--text-normal);
 	border-radius:5px;
 	margin:5px;
-	background: rgba(var(--color-red-rgb), .15);
-
 	background: repeating-linear-gradient(
 	  45deg,
 	  rgba(var(--color-red-rgb), .1),
@@ -661,7 +615,6 @@
 .task_finder_confirmation_task_render pre {
 	tab-size: 4ch;
 	text-indent: 4ch hanging each-line;
-
     white-space: pre-wrap;
 }
 

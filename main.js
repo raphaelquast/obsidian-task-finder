@@ -30,6 +30,22 @@ const DEFAULT_SETTINGS = {
 	"queryDropdownOptions":[]
 }
 
+const RANGE_COLOR_CYCLE = [
+	"--text-muted",
+	"--color-pink",
+	"--color-cyan",
+	"--color-yellow",
+	"--color-purple",
+	"--color-blue",
+	"--color-orange",
+	"--color-red",
+	"--color-green",
+	]
+
+
+
+
+
 class FolderSuggest extends obsidian.AbstractInputSuggest {
 	constructor(plugin, inputEl) {
 	super(plugin.app, inputEl)
@@ -2024,7 +2040,7 @@ class TaskSuggester extends obsidian.SuggestModal {
 		t.addEventListener("mouseenter", (event) => {
 			const tagtooltip = new DocumentFragment()
 			if (tooltip) {
-				tagtooltip.createEl('span', {text:tooltip, cls:"taskfinder_tooltip_prefix"})
+				tagtooltip.createEl('div', {text:tooltip, cls:"taskfinder_tooltip_prefix"})
 			}
 			tagtooltip.createEl('a', {cls:'tag colored-tag-task', text:tag, attr:{href:tag}})
 			obsidian.displayTooltip(t, tagtooltip, {placement:"top", classes:["taskfinder_tooltip", "taskfinder_tag_tooltip"]})
@@ -2581,31 +2597,55 @@ class TaskSuggester extends obsidian.SuggestModal {
 				date_range_icon = "lucide-ellipsis-vertical"
 			}
 
+			const usecolor = RANGE_COLOR_CYCLE[((match.range_item_number[0] % RANGE_COLOR_CYCLE.length) + RANGE_COLOR_CYCLE.length) % RANGE_COLOR_CYCLE.length]
 			const t = this.addTaskIcon(
 				checkboxdiv,
 				date_range_icon,
+				`var(${usecolor})`,
+				null,
+				null
+				)
+
+			t.className += ` task_finder_item_checkbox task_finder_range_item task_finder_range_item_icon_${match.range_item_number[0]}`
+
+			t.addEventListener("mouseenter", () => {
+				for (const ti of document.querySelectorAll(`.task_finder_range_item_icon_${match.range_item_number[0]}`)){
+					ti.style.outline=`2px solid var(${usecolor})`
+				}
+			})
+
+			t.addEventListener("mouseleave", () => {
+				for (const ti of document.querySelectorAll(`.task_finder_range_item_icon_${match.range_item_number[0]}`)){
+					ti.style.outline="initial"
+				}
+			})
+
+
+		} else if ((match.multidates != null) & (!always_show_checkbox)) {
+			// add multi-date icons
+
+			const t = this.addTaskIcon(
+				checkboxdiv,
+				"lucide-copy-check",
 				null,
 				null,
 				null
 				)
 
-			t.className += " task_finder_item_checkbox task_finder_range_item_icon"
-			t.className += ` task_finder_item_checkbox task_finder_range_item_icon_${match.range_item_number[0]}`
+			t.className += ` task_finder_item_checkbox task_finder_range_item task_finder_multidate_item_icon_${match.range_item_number[0]}`
+			t.addEventListener("mouseenter", () => {
+				for (const ti of document.querySelectorAll(`.task_finder_multidate_item_icon_${match.range_item_number[0]}`)){
+					ti.style.outline="2px solid var(--text-muted)"
+				}
+			})
 
-		} else if ((match.multidates != null) & (!always_show_checkbox)) {
-				// add multi-date icons
+			t.addEventListener("mouseleave", () => {
+				for (const ti of document.querySelectorAll(`.task_finder_multidate_item_icon_${match.range_item_number[0]}`)){
+					ti.style.outline="initial"
+				}
+			})
 
-				const t = this.addTaskIcon(
-					checkboxdiv,
-					"lucide-copy-check",
-					null,
-					null,
-					null
-					)
-				t.className += " task_finder_item_checkbox task_finder_range_item_icon"
-				t.className += ` task_finder_item_checkbox task_finder_range_item_icon_${match.range_item_number[0]}`
-		//} else if ((match.subtasks.length > 0) & (!always_show_checkbox)) {
-			// don't add checkbox in case we have subtasks present
+
 		} else {
 			const i = checkboxdiv.createEl('input', {cls:'task_finder_item_checkbox', type: 'checkbox', 'data-task':`*`});
 			i.addEventListener("click",
