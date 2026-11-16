@@ -560,6 +560,43 @@ class SettingTab extends obsidian.PluginSettingTab {
 		control: { type: 'toggle', key: 'hideQueryTags'} },
 		{name: 'Always include "today" entry.', desc: 'Add a "today" entry even if there are no tasks scheduled for today.',
 		 control: { type: 'toggle', key: 'renderDummyToday'} },
+
+	]},
+
+	{
+	type:"page",
+	name: "Behaviour",
+	desc:"General behaviour settings",
+	items:[
+		{
+		  name: 'Task check-status',
+		  desc: 'Set which tasks to include based on their check-status.',
+		  control: {
+			type: 'dropdown',
+			key: 'includeStatus',
+			defaultValue: DEFAULT_SETTINGS.includeStatus,
+			options: { 'unchecked': 'Only unchecked tasks', 'checked': 'Only checked tasks', 'all': 'All tasks' },
+		  },
+		},
+		{name: 'Show task-cache refresh message.', desc: 'Show a message indicating changed files and duration of task-cache evaluation.',
+		 control: { type: 'toggle', key: 'showCacheRefreshMessage'} },
+		{name: 'Query Debounce Time', desc: 'The time between typing and query-execution (miliseconds).',
+		 control: { type: 'number', key: 'queryDebounceTime', placeholder: 'Enter query debounce time', min: 0} },
+		{name: 'Set how to open task notes', desc:'Define how the task-note is opened when clicking on "Open Note"',
+		control: { type:'dropdown', key:'openNewNoteType', options:{"window":"Popup Window", "tab": "New Tab", "split":"Split-Tab"}}},
+		{name: 'View update interval', desc: 'Time-interval (in seconds) to re-render the TaskFinder view (to show correct relative date/time). If set to 0, periodic re-rendering is disabled!',
+		 control: { type: 'number', key: 'viewUpdateInterval', placeholder: 'Enter task view limit', min: 0} },
+		{name: 'Require "control-click" to toggle checkboxes', desc: 'If true, checkboxes in the timeline can only be toggled if the "control" button is pressed.',
+		 control: { type: 'toggle', key: 'requireControlClick'} },
+	]},
+
+
+	{
+	type:"page",
+	name: "Sub-Tasks, Recurring-Tasks, Daily-Note Tasks",
+	desc:"Settings for sub-tasks, recurring-tasks and tasks defined in daily-notes",
+	items:[
+
 		{type: 'group',
 			 heading: 'Sub-Tasks',
 			 items:[
@@ -599,34 +636,9 @@ class SettingTab extends obsidian.PluginSettingTab {
 				{name: 'Daily Note Date Format:', desc: 'The moment.js date-format used for the daily-note filenames.',
 				control: { type: 'text', key: 'dailyNoteFilenameFmt' }},
 		]},
-	]},
+		]
+	},
 
-	{
-	type:"page",
-	name: "Behaviour",
-	desc:"General behaviour settings",
-	items:[
-		{
-		  name: 'Task check-status',
-		  desc: 'Set which tasks to include based on their check-status.',
-		  control: {
-			type: 'dropdown',
-			key: 'includeStatus',
-			defaultValue: DEFAULT_SETTINGS.includeStatus,
-			options: { 'unchecked': 'Only unchecked tasks', 'checked': 'Only checked tasks', 'all': 'All tasks' },
-		  },
-		},
-		{name: 'Show task-cache refresh message.', desc: 'Show a message indicating changed files and duration of task-cache evaluation.',
-		 control: { type: 'toggle', key: 'showCacheRefreshMessage'} },
-		{name: 'Query Debounce Time', desc: 'The time between typing and query-execution (miliseconds).',
-		 control: { type: 'number', key: 'queryDebounceTime', placeholder: 'Enter query debounce time', min: 0} },
-		{name: 'Set how to open task notes', desc:'Define how the task-note is opened when clicking on "Open Note"',
-		control: { type:'dropdown', key:'openNewNoteType', options:{"window":"Popup Window", "tab": "New Tab", "split":"Split-Tab"}}},
-		{name: 'View update interval', desc: 'Time-interval (in seconds) to re-render the TaskFinder view (to show correct relative date/time). If set to 0, periodic re-rendering is disabled!',
-		 control: { type: 'number', key: 'viewUpdateInterval', placeholder: 'Enter task view limit', min: 0} },
-		{name: 'Require "control-click" to toggle checkboxes', desc: 'If true, checkboxes in the timeline can only be toggled if the "control" button is pressed.',
-		 control: { type: 'toggle', key: 'requireControlClick'} },
-	]},
 
 		{
 		type:"page",
