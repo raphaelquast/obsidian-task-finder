@@ -138,7 +138,7 @@
 	padding-left:5px;
 	display:inline;
 	vertical-align:top;
-	word-break: break-all;
+	overflow-wrap: anywhere;
 }
 
 .task_finder_item_text b, i, a:link {
@@ -247,6 +247,8 @@
 	padding-left:1ch;
 	border-left:1px dashed var(--background-modifier-active-hover);
 	white-space:pre;
+	overflow-wrap: anywhere;
+	text-wrap:wrap;
 	max-width:90%;
 }
 
