@@ -13,20 +13,20 @@ const DEFAULT_SETTINGS = {
 	"excludedFolders": [],
 	"excludedFoldersRegex": [],
 	"tagIcons": [],
-	"showCacheRefreshMessage": true,
+	"showCacheRefreshMessage": false,
 	"includeSubTasks":true,
-	"showPath":true,
-	"showHeader":true,
+	"showPath":false,
+	"showHeader":false,
 	"recurranceRepetitions": 5,
-	"dailyNotePath":"Termine",
+	"dailyNotePath":"DailyNotes",
 	"dailyNoteFilenameFmt":"YYYY-MM-DD",
-	"hideQueryTags":true,
+	"hideQueryTags":false,
 	"renderDummyToday":true,
 	"openNewNoteType":"tab",
 	"viewUpdateInterval":60,
-	"expandSubTasks":true,
+	"expandSubTasks":false,
 	"showDifferentDatedSubTasksInDropdown":true,
-	"requireControlClick":true,
+	"requireControlClick":false,
 	"queryDropdownOptions":[]
 }
 
@@ -41,10 +41,6 @@ const RANGE_COLOR_CYCLE = [
 	"--color-red",
 	"--color-green",
 	]
-
-
-
-
 
 class FolderSuggest extends obsidian.AbstractInputSuggest {
 	constructor(plugin, inputEl) {
