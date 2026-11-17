@@ -923,7 +923,7 @@ details[open]::details-content {
 }
 
 .task_finder_callout_details{
-  background: var(--background-primary);
+  background: var(--background-secondary);
   border-bottom-left-radius:15px;
   border-bottom-right-radius:15px;
 }
