@@ -3471,9 +3471,11 @@ class TaskFinderView extends obsidian.ItemView {
 			})
 
 		// connect update triggers
-		app.metadataCache.on('resolved', async () => {
-			refreshTaskCache(this.plugin).then(()=>{this.reRenderSuggestions()})
-			})
+		this.plugin.registerEvent(
+			app.metadataCache.on('resolved', async () => {
+				refreshTaskCache(this.plugin).then(()=>{this.reRenderSuggestions()})
+				})
+		)
 
 		// periodically update view to show correct times
 		if (this.plugin.settings.viewUpdateInterval > 0) {
@@ -3538,10 +3540,6 @@ class TaskFinder extends obsidian.Plugin {
 
 		await this.loadSettings();
 		this.addSettingTab(new SettingTab(this.app, this));
-
-		// app.metadataCache.on('resolved', () => {
-			// refreshTaskCache(this)
-		// })
 
 		this.addCommand({
 		  id: 'find-tasks',
@@ -3616,9 +3614,9 @@ class TaskFinder extends obsidian.Plugin {
 				});
 			};
 			detailsEl.addEventListener("toggle", getCallback(this, detailsEl, container, query))
-
-			app.metadataCache.on('resolved', getCallback(this, detailsEl, container, query))
-
+			this.registerEvent(
+				app.metadataCache.on('resolved', getCallback(this, detailsEl, container, query))
+			)
 		});
 
 
