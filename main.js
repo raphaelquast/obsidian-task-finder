@@ -3571,6 +3571,8 @@ class TaskFinder extends obsidian.Plugin {
 			}
 
 			[query, header, options] = rows;
+			if (options) {options = options.split(",")} else {options = []}
+
 			el.empty();
 			el.className = "taskfinder_inline_block"
 			const detailsEl = el.createEl("details", {cls:"task_finder_callout_details"})
@@ -3579,7 +3581,14 @@ class TaskFinder extends obsidian.Plugin {
 			const titleEl = summaryEl.createEl("span", {text: header?header:`TaskFinder Query: ${query}`, cls:"task_finder_callout_title"})
 			const container = detailsEl.createEl("div", {cls: "taskfinder_inline_content"})
 
-			detailsEl.open = (options && options.includes("open"))?true:false
+			detailsEl.open = (options.includes("open"))?true:false
+
+			// set max-height for inline content based on options
+			let height = options.find((s)=>s.startsWith("height="))
+			// todo find out how to properly use units relative to the editor-width
+			if (!height) {height = "40vh"} else {height=height.slice(7).replace("%", "vh")}
+			container.style["max-height"] = height
+
 			// callback to trigger fetching tasks and render results
 			function getCallback (plugin, detailsEl, container, query) {
 				 //IIFE pattern to allow async call here´

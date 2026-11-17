@@ -245,11 +245,11 @@
 	padding-bottom:5px;
 	margin-left:1ch;
 	padding-left:1ch;
+	padding-right:2ch;
 	border-left:1px dashed var(--background-modifier-active-hover);
 	white-space:pre;
 	overflow-wrap: anywhere;
 	text-wrap:wrap;
-	max-width:90%;
 }
 
 .task_finder_additional_text_container:empty {
@@ -914,8 +914,8 @@ details[open]::details-content {
 .taskfinder_inline_content{
 	border-bottom-left-radius:15px;
 	border-bottom-right-radius:15px;
-	max-height: 40vh;
 	overflow-y: scroll;
+	margin-left:12px;
 }
 
 .taskfinder_inline_block {
