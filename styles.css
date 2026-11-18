@@ -105,14 +105,6 @@
 	filter: brightness(50%);
 }
 
-.suggestion-item {
-	padding: 5px!important;
-}
-
-.suggestion-item.is-selected {
-	background: transparent!important;
-}
-
 .task_finder.suggestion-item {
 	background: var(--background-primary);
 	margin-bottom:10px;
@@ -131,6 +123,9 @@
 	vertical-align:middle;
 	display:inline;
     flex: 1;
+	margin-left:20px;
+	margin-top:-2px;
+
 }
 
 .task_finder_item_text {
@@ -144,10 +139,6 @@
 .task_finder_item_text b, i, a:link {
 	color:var(--text-normal)
 }
-
-.task_finder_recurrance_icon svg {
-	color: var(--text-muted)!important;
-  }
 
 .task_finder_item .task_finder_tag_icon {
 	margin-right:4px;
@@ -172,9 +163,8 @@
 .task_finder_item_checkbox {
 	width:15px;
     filter:brightness(100%);
-	margin-right:20px!important;
+	margin-right:20px;
 	display:flex;
-	margin-top:2px!important;
 	margin-bottom:auto;
   }
 
@@ -195,10 +185,8 @@
 	box-shadow: 0px 0px 10px 2px var(--color-purple);
 }
 
-
-
 .task_finder_item_checkbox:not(.task_finder_range_item):hover {
-	outline:2px solid var(--text-on-accent)!important;
+	outline:2px solid var(--text-on-accent);
 }
 
 .task_finder_item_footnote {
@@ -292,18 +280,19 @@
   transition:all 1s ease-out;
 }
 
-.task_finder_show_subtask_button {
-	box-shadow:none!important;
-	background:var(--background-primary)!important;
+#task_finder_show_subtask_button {
+	box-shadow:none;
+	background:var(--background-primary);
 	margin-right:5px;
 	margin-left:-15px;
 }
 
-.task_finder_show_subtask_button:hover {
-	background:var(--background-primary)!important;
-	outline: 1px solid var(--background-modifier-active-hover)!important;
-
+#task_finder_show_subtask_button:hover {
+	background:var(--background-primary);
+	outline: 1px solid var(--background-modifier-active-hover);
 }
+
+
 .subtask_container {
 	display:none;
 	flex-direction:column;
@@ -345,11 +334,6 @@
 .subtask .task_finder_item_checkbox {
 	border:1px dashed var(--checkbox-border-color-hover)
 }
-
-.subtask .task_finder_footnote_folder {
-	display:none!important;
-}
-
 
 /*don't show subtask-dates for subtasks outside a subtask-containaer*/
 .subtask_date_indicator:not(.subtask_container *),
@@ -416,10 +400,10 @@
 	margin-top:0px;
 }
 
-.taskfinder_contextmenu_priority > button {
-	padding:5px!important;
-	height:30px!important;
-	width:30px!important;
+#priority_button {
+	padding:5px;
+	height:30px;
+	width:30px;
 	box-shadow:none;
 }
 .taskfinder_contextmenu_priority svg {
@@ -501,41 +485,6 @@
 	color:var(--text-normal)
 }
 
-
-.reschedule_minus {
-	padding-left:5px!important;
-	padding-right:5px!important;
-	min-width:80px!important;
-	max-width:80px!important;
-	margin-left:2px;
-	margin-right:2px;
-
-}
-
-.reschedule_today {
-	margin-left:5px;
-	margin-right:5px;
-	min-width:80px!important;
-	max-width:80px!important;
-
-}
-
-.reschedule_today span {
-	margin-left:5px;
-}
-
-.reschedule_plus {
-	padding-left:5px!important;
-	padding-right:5px!important;
-	min-width:80px!important;
-	max-width:80px!important;
-	margin-left:2px;
-	margin-right:2px;
-
-}
-
-
-
 .taskfinder_contextmenu_reschedule .reschedule_container {
 	overflow:scroll;
 	display:inline-flex;
@@ -589,10 +538,9 @@
 	filter:none
 }
 
-.taskfinder_taskicon_contextmenu_add_button,
-.taskfinder_taskicon_contextmenu_remove_button {
-	padding:4px!important;
-	box-shadow:none!important;
+#taskicon_edit_button {
+	padding:4px;
+	box-shadow:none;
 	margin:2px;
 }
 
@@ -637,15 +585,19 @@
 	display:none
 }
 
+#no_background_icon {
+	background:none;
+	box-shadow:none;
+	padding:0;
+	margin:0;
+}
+
 .task_finder_edit_date_icon {
 	grid-column-start: 1;
 	grid-column-end: 2;
-	background:none!important;
-	box-shadow:none!important;
-	padding:0!important;
-	margin:0!important;
 	--icon-size: 15px;
 }
+
 .task_finder_edit_date_icon svg {
 	color:var(--text-muted);
 }
@@ -658,20 +610,12 @@
 .task_finder_date_edit_input_dummy {
 	grid-column-start: 2;
 	grid-column-end: 3;
-	background:none!important;
-	box-shadow:none!important;
-	color:var(--text-faint)!important;
-	font-weight:normal!important;
 	font-style:italic;
 }
 
 .task_finder_edit_time_icon {
 	grid-column-start: 3;
 	grid-column-end: 4;
-	background:none!important;
-	box-shadow:none!important;
-	padding:0!important;
-	margin:0!important;
 	--icon-size: 15px;
 }
 
@@ -719,11 +663,11 @@
 
 .task_finder_date_edit_input.input_valid:not(:placeholder-shown),
 .task_finder_time_edit_input.input_valid {
-	border:3px solid green!important;
+	outline:3px solid green;
 }
 .task_finder_date_edit_input.input_invalid:not(:placeholder-shown),
 .task_finder_time_edit_input.input_invalid {
-	border:3px solid red!important;
+	outline:3px solid red;
 }
 
 
@@ -783,13 +727,6 @@
 .task_finder_edit_priority_dropdown:hover {
 	box-shadow:none;
 	background:var(--background-primary)
-}
-
-
-
-.task_finder_edit_priority_dropdown::after {
-	outline:none!important;
-	border:1px solid red!important;
 }
 
 .task_finder_edit_remove_task_button{
@@ -896,10 +833,10 @@
 	overflow:scroll
 }
 
-.task_finder_tag_icon_edit_button{
-	box-shadow:none!important;
-	background:var(--background-primary-alt)!important;
-	color:var(--text-faint)!important;
+#task_finder_tag_icon_edit_button {
+	box-shadow:none;
+	background:var(--background-primary-alt);
+	color:var(--text-faint);
 }
 
 /*CALLOUT*/
