@@ -564,7 +564,6 @@
 }
 .task_finder_confirmation_task_render pre {
 	tab-size: 4ch;
-	text-indent: 4ch hanging each-line;
     white-space: pre-wrap;
 }
 
