@@ -843,7 +843,8 @@ class SettingTab extends obsidian.PluginSettingTab {
 				obsidian.setIcon(iconspan, f[1]);
 				item.nameEl.createEl("span", {text:`(${f[1]})`})
 
-				const editButtonEl = item.controlEl.createEl("button", {cls:"task_finder_tag_icon_edit_button"})
+				const editButtonEl = item.controlEl.createEl("button")
+				editButtonEl.id = "task_finder_tag_icon_edit_button"
 				obsidian.setIcon(editButtonEl, "lucide-square-pen")
 
 				editButtonEl.addEventListener('click', (event) => {
@@ -1026,6 +1027,7 @@ class TaskEditModal extends obsidian.Modal {
 			.setClass("task_finder_edit_date_icon")
 			.setTooltip("Start date")
 
+			btn.buttonEl.id = "no_background_icon"
 			if (this.task.datesource == "daily_note") {
 				btn.setIcon("lucide-calendar-check-2")
 			} else {
@@ -1070,9 +1072,12 @@ class TaskEditModal extends obsidian.Modal {
 	)
 	.addButton((btn) => {
 		btn
-		  .setClass("task_finder_edit_time_icon")
-		  .setIcon("lucide-clock-arrow-down")
-		  .setTooltip("Start time")
+			.setClass("task_finder_edit_time_icon")
+			.setIcon("lucide-clock-arrow-down")
+			.setTooltip("Start time")
+
+			btn.buttonEl.id = "no_background_icon"
+
 	})
 
 	.addText((text) => {
@@ -1131,6 +1136,9 @@ class TaskEditModal extends obsidian.Modal {
 		btn
 		.setClass("task_finder_edit_date_icon")
 		.setTooltip("End date")
+
+		btn.buttonEl.id = "no_background_icon"
+
 		if (this.task.datesource == "daily_note") {
 			btn.setIcon("lucide-triangle-alert")
 			btn.buttonEl.style.display="none"
@@ -1143,6 +1151,9 @@ class TaskEditModal extends obsidian.Modal {
 		btn
 		.setClass("task_finder_date_edit_input_dummy")
 		.setButtonText("Daily Note task")
+
+		btn.buttonEl.id = "no_background_icon"
+
 		if (this.task.datesource == "daily_note") {
 			btn.buttonEl.style.display = "block"
 		} else {
@@ -1192,6 +1203,9 @@ class TaskEditModal extends obsidian.Modal {
 		  .setClass("task_finder_edit_time_icon")
 		  .setIcon("lucide-clock-arrow-up")
 		  .setTooltip("End time")
+
+		  btn.buttonEl.id = "no_background_icon"
+
 	})
 	.addText((text) => {
 		this.endTimeInputEl = text.inputEl
@@ -2389,6 +2403,7 @@ class TaskSuggester extends obsidian.SuggestModal {
 
 		function makeRemoveButton(el, tag, icon, color) {
 			const b = el.createEl("button", {cls:"taskfinder_taskicon_contextmenu_remove_button"})
+			b.id = "taskicon_edit_button"
 			suggester.addTaskIcon(b, icon, color, tag, "remove: ")
 
 			b.addEventListener("click", (event) => {
@@ -2401,6 +2416,7 @@ class TaskSuggester extends obsidian.SuggestModal {
 
 		function makeAddButton(el, tag, icon, color) {
 			const b = el.createEl("button", {cls:"taskfinder_taskicon_contextmenu_add_button"})
+			b.id = "taskicon_edit_button"
 			suggester.addTaskIcon(b, icon, color, tag, "add: ")
 
 			b.addEventListener("click", (event) => {
@@ -2447,18 +2463,20 @@ class TaskSuggester extends obsidian.SuggestModal {
 		item.dom.empty()
 
 
-		const p1 = item.dom.createEl("button", {cls:"taskfinder_contextmenu_priority_lowest"})
+		const p1 = item.dom.createEl("button", {cls:"taskfinder_contextmenu_priority_lowest", attr:{id:"priority_button"}})
 		obsidian.setIcon(p1.createEl("div"), "rewind")
-		const p2 = item.dom.createEl("button", {cls:"taskfinder_contextmenu_priority_low"})
+		const p2 = item.dom.createEl("button", {cls:"taskfinder_contextmenu_priority_low", attr:{id:"priority_button"}})
 		obsidian.setIcon(p2.createEl("div"), "triangle")
 
-		const p0 = item.dom.createEl("button", {cls:"taskfinder_contextmenu_priority_none"})
+		const p0 = item.dom.createEl("button", {cls:"taskfinder_contextmenu_priority_none", attr:{id:"priority_button"}})
 		obsidian.setIcon(p0.createEl("div"), "square")
 
-		const p3 = item.dom.createEl("button", {cls:"taskfinder_contextmenu_priority_mid"})
+		const p3 = item.dom.createEl("button", {cls:"taskfinder_contextmenu_priority_mid", attr:{id:"priority_button"}})
 		obsidian.setIcon(p3.createEl("div"), "triangle")
-		const p4 = item.dom.createEl("button", {cls:"taskfinder_contextmenu_priority_high"})
+		const p4 = item.dom.createEl("button", {cls:"taskfinder_contextmenu_priority_high", attr:{id:"priority_button"}})
 		obsidian.setIcon(p4.createEl("div"), "rewind")
+
+
 
 		if(task.priority=="lowest") {p1.classList.add("active")}
 		else if(task.priority=="low") {p2.classList.add("active")}
@@ -2486,11 +2504,10 @@ class TaskSuggester extends obsidian.SuggestModal {
 
 		for (let i = -7; i <= 7; i++) {
 			const icon = (i==0?"calendar-sync":(i < 0?"chevron-left":"chevron-right"))
-			const cls = (i==0?"reschedule_today":(i < 0?"reschedule_minus":"reschedule_plus"))
 			const newdate = (i==0?refdate:refdate.clone().add(i, "day"));
 			const txt = newdate.format("dd, DD MMM")
 
-			const p0 = el.createEl("button", {cls:cls})
+			const p0 = el.createEl("button")
 			const p1 = p0.createEl("div", {cls:"reschedule_text"})
 			p1.createEl("span", {text:(i==0?(menu.shift_down?"task-date":"today"):(i>0?"+":"") + (i!=0?i.toString():txt))})
 			p1.createEl("span", {text:txt})
@@ -2597,7 +2614,7 @@ class TaskSuggester extends obsidian.SuggestModal {
 			const t = this.addTaskIcon(
 				checkboxdiv,
 				"lucide-repeat",
-				"#f07a4d",
+				"var(--text-muted)",
 				null,
 				this.getRecurranceStr(match)
 				)
@@ -2675,6 +2692,7 @@ class TaskSuggester extends obsidian.SuggestModal {
 
 		}
 
+		const tasktextEl = txtdiv.createEl('div', {cls:'task_finder_item_text_container'});
 
 		// add a button to show/hide subtasks)
 		let subtaskbuttonEl;
@@ -2685,11 +2703,10 @@ class TaskSuggester extends obsidian.SuggestModal {
 			if (always_show_checkbox) {
 				subtaskContainerEl.classList.add("show_subtasks")
 			} else {
-				subtaskbuttonEl = txtdiv.createEl("button", {cls:"task_finder_show_subtask_button"})
+				subtaskbuttonEl = tasktextEl.createEl("button", {attr:{id:"task_finder_show_subtask_button"}})
 				obsidian.setIcon(subtaskbuttonEl, "square-stack")
 			}
 		}
-
 
 		if (!always_show_checkbox) {
 			if (match.subtasks && match.subtasks.length > 0) {
@@ -2710,13 +2727,10 @@ class TaskSuggester extends obsidian.SuggestModal {
 				subtaskbuttonEl.addEventListener("click", () => {
 					subtaskContainerEl.classList.toggle("show_subtasks");
 					})
-
-
 			}
 		}
 
 
-		const tasktextEl = txtdiv.createEl('div', {cls:'task_finder_item_text_container'});
 		// open openTaskEditor modal if task is clicked
 		if (open_editor_on_click) {
 			tasktextEl.addEventListener("click", (event) => {
@@ -2800,9 +2814,12 @@ class TaskSuggester extends obsidian.SuggestModal {
 			}
 		}
 
-		const task_path_footnote = footnote.createEl("div", {cls:"task_finder_footnote_folder", text:match.path.slice(0, -3)})
-		if (!this.plugin.settings.showPath) {
-			task_path_footnote.classList.add("hidden")
+		// only add task-folder indicator on parent tasks (subtasks always share the note with the parent)
+		if (!match.parent_task) {
+			const task_path_footnote = footnote.createEl("div", {cls:"task_finder_footnote_folder", text:match.path.slice(0, -3)})
+			if (!this.plugin.settings.showPath) {
+				task_path_footnote.classList.add("hidden")
+			}
 		}
 
 		if ( match.date || (match.parent_task && match.parent_task.date)) {
