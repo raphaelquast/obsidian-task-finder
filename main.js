@@ -864,10 +864,18 @@ class SettingTab extends obsidian.PluginSettingTab {
 
 function sortByTime(a, b) {
     if (a.date === null) {
-        return 1;
+		if (a.priority || b.priority) {
+			return PRIORITY_RANKING.indexOf(a.priority) - PRIORITY_RANKING.indexOf(b.priority)
+		} else {
+			return 1;
+		}
     }
     if (b.date === null) {
-        return -1;
+		if (a.priority || b.priority) {
+			return PRIORITY_RANKING.indexOf(a.priority) - PRIORITY_RANKING.indexOf(b.priority)
+		} else {
+			return -1;
+		}
     }
 
 	if (a.date.isSame(b.date)) {
