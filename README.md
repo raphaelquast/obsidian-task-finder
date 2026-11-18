@@ -4,50 +4,30 @@ A plugin to help you find (and edit) tasks inside your vault.
 (on Desktop and Mobile)
 
 ### Interested in contributing to the plugin?
-
-There are many things you can do to help this plugin... just open an issue and get in touch!  
-**Any help is highly appreciated!**
-
-- improve code / fix issues / add features
-- report issues
-- provide suggestions for nice features
-- write documentation / tutorials
+**Any help is highly appreciated!** ... just open an issue and get in touch!  
 
 ## What do you get with the plugin?
 ### A queryable sidebar view to inspect (and edit) all tasks in your vault
 
-<img src="./images/basic_query.png" width=100%>
+<img src="./images/GeneralOverview.png" width=100%>
 
 ## How does it work?
 
-TaskFinder builds upon the icon-syntax introduced by the [**Tasks**](https://publish.obsidian.md/tasks/Introduction) plugin.
+TaskFinder parses all tasks defined via the icon-syntax introduced by the [**Tasks**](https://publish.obsidian.md/tasks/Introduction) plugin.
+It then provides a **queryable** timeline-view of all tasks in your vault.  
+**"Left-click** or **Right-click"** on a task in the timeline to open quick-edit menus.
 
-It handles **scheduled and unscheduled tasks** with optional **start- and end-time** as well as **ranged tasks** (e.g.: holidays, travels, ...) and **repeated tasks** (e.g.: birthdays, meetings ...).
+> To open the timeline, click on the ribbon-icon or run the `Task Finder: Find Tasks` command.
 
-It provides a **queryable** timeline-view of all tasks in your vault.  
-
-To get a compact view, you can define **custom tag-icons** to represent tags in the timeline.  
-Tasks with **priorities** assigned are highlighted in the timeline.
-
-**Sub-tasks** are shown in a collapsible container below the parent task.  
-(dated sub-tasks also appear as explicit tasks in the timeline)
-
-You can **check tasks** by clicking the checkboxes in the view!  
-(or change the setting to use "control-click" to avoid accidental clicks...)
-
-Finally, TaskFinder provides a **"right-click menu"** and a **"left-click popup"** to quickly perform basic task edits such as **re-schedule**, **set priority**, **add/remove tag** etc.
-
-### Quick-edit menu if you "right-click" on a task in the view
 
 <img src="./images/RightClickMenu.png" width="50%">
 
-### Re-schedule menu if you "left-click" on a task in the view
-
 <img src="./images/LeftClickPopup.png" width="70%">
+
 
 ### Tag Icons
 
-You can define custom tag icons in the settings to get a nice compact view!  
+You can assign a custom **tag-icon** to a tag in the settings to get a nice compact view!  
 Every tag that has an icon defined can also be added/removed via the right-click menu!
 
 <img src="./images/TagIcons.png" width="50%">
@@ -56,6 +36,37 @@ Every tag that has an icon defined can also be added/removed via the right-click
 
 <img src="./images/RangedTasks.png" width="49%"><img src="./images/SubTasks.png" width="49%">
 <img src="./images/RecurringTasks.png" width="50%">
+
+
+## Anatomy of a task
+<img src="./images/AnatomyOfATask.png" width="90%">
+
+```
+- [ ] 10:00  A scheduled task 📅 2026-11-14 
+	- [ ] with a sub-task
+
+- [ ] 10:00 - 00:00 Lets go on holiday! #privat 📅 2026-12-14 - 2026-12-17	
+	- [ ] pack stuff for holiday 📅 2026-12-13 
+		don't forget to pack suncream!
+	- [ ] do nothing
+	- [ ] travel to destination 📅 2026-12-14
+	- [ ] travel home 📅 2026-12-20 
+
+- [ ] A task for today #question  📅 2026-11-18 
+
+- [ ] 12:00 An important scheduled task #important #privat 📅 2026-11-17 ⏫
+	with **high priority**
+
+- [ ] An unscheduled task #tag_without_icon
+
+- [ ] A task-range #meeting 📅 2026-11-15 - 2026-11-19 🔽
+	with low priority
+
+- [ ] A multi-date task 📅 2026-11-22, 2026-11-23
+
+- [ ] A repeated task #geburtstag 🔁 every year  📅 2026-11-22
+	(will show up every year)
+```
 
 # Installation
 
