@@ -1594,8 +1594,8 @@ class TaskSuggester extends obsidian.SuggestModal {
 			// also push it as an individual task so that it correctly shows up in the timeline
 			// NOTE: ranged tasks might act as parents which is why checking
 			// for equality between the parent and the subtask is not enough
-			if (match.date && sub.date) {
-				if (!match.date.isSame(sub.date, "day")) {
+			if (sub.date) {
+				if (!match.date || !match.date.isSame(sub.date, "day")) {
 					dated_singleton_subtasks.add(sub)
 				} else {
 					dated_subtasks.add(sub)
