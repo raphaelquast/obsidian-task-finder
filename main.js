@@ -1667,6 +1667,33 @@ class TaskSuggester extends obsidian.SuggestModal {
 
   // Returns all available suggestions.
   getSuggestions(query){
+	if (query.contains("|")) {
+		const all_results = []
+		for (const q of query.split("|")) {
+			all_results.push(...this.getSuggestions(q.trim()))
+		}
+
+		const out = []
+		const out_dates = []
+
+		for (const r of all_results) {
+			const idx = out_dates.findIndex((d)=>{if (moment.isMoment(d)) {return d.isSame(r[0])} else {return d == r[0]}})
+			if (idx > -1) {
+				console.log(out, idx)
+				out[idx][1].push(...r[1])
+			} else {
+				out.push(r)
+				out_dates.push(r[0])
+			}
+		}
+		// we need to re-sort entries to respect priorities etc.
+		for (const o of out) {
+			o[1] = o[1].sort(sortByTime)
+		}
+		console.log(out_dates)
+		return out
+	}
+
 	// TODO allow querying subtasks
 
 	let use_content = this.content
