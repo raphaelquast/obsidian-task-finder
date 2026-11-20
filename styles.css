@@ -367,7 +367,7 @@ div[id^='taskfinder_container_'], div[id*='taskfinder_container_']{
 
 .taskfinder_view_container {
 	overflow:scroll;
-	height:calc(100% - 50px);
+	min-height:calc(100% - 50px);
 }
 
 .taskfinder_view_input_container {
