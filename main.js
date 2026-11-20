@@ -2935,7 +2935,6 @@ class TaskSuggester extends obsidian.SuggestModal {
   renderSuggestion(matches, el) {
 	let [grp, grp_matches] = matches
 
-
 	// create a dummy today entry if no tasks for today have been defined
 	// TODO avoid duplication of code in here...
 	if (!this.today_rendered & this.plugin.settings.renderDummyToday & (grp != null) & this.query_contains_today){
@@ -2955,8 +2954,8 @@ class TaskSuggester extends obsidian.SuggestModal {
 	// (required to trigger rendering of the dummy-today entry in case no tasks are found in the query
 	if (grp_matches.length == 0) {return}
 
-	// define monthly (sticky) headers
-	el = this.getStickyHeader(el, grp)[1].createEl("div")
+	// get monthly (sticky) headers and create item container
+	el = this.getStickyHeader(el, grp)[1].createEl("div", {cls:"task_finder suggestion-item"})
 
 	let header_txt = "???"
 	let header_txt_right = "???"
@@ -3395,8 +3394,7 @@ async function renderSuggesterQueryResult(plugin, el, query) {
 		ts.createHeader(el)
 	}
 	for (const sug of ts.getSuggestions(query)){
-		const taskcontainer = el.createEl("div", {cls:"task_finder suggestion-item"})
-		await ts.renderSuggestion(sug, taskcontainer)
+		await ts.renderSuggestion(sug, el)
 	};
 }
 
@@ -3445,10 +3443,12 @@ class TaskFinderView extends obsidian.ItemView {
 			suggester.setContent(suggester.plugin.taskCache)
 
 			el.empty();
-			for (const sug of suggester.getSuggestions(query)){
-				const taskcontainer = el.createEl("div", {cls:"task_finder suggestion-item"})
-				suggester.renderSuggestion(sug, taskcontainer)
+
+			const suggestions = suggester.getSuggestions(query)
+			for (const sug of suggestions){
+				suggester.renderSuggestion(sug, el)
 			};
+
 		})
 	}
 
@@ -3633,8 +3633,7 @@ class TaskFinder extends obsidian.Plugin {
 							}
 
 							for (const sug of ts.getSuggestions(query)){
-								const taskcontainer = container.createEl("div", {cls:"task_finder suggestion-item"})
-								ts.renderSuggestion(sug, taskcontainer)
+								ts.renderSuggestion(sug, container)
 
 							};
 						});
