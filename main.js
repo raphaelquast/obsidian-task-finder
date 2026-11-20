@@ -2160,7 +2160,7 @@ class TaskSuggester extends obsidian.SuggestModal {
 
 			// replace existing priority
 			if (new_tasktext.match(/[⏫🔼🔽⏬]/u) && (priority != null)) {
-				new_tasktext = new_tasktext.replace(/(.*)(?:\s+)?( [⏫🔼🔽⏬])(?:\s+)?(.*)/u, "$1" + "$3" + (priority?(" " + priority):""))
+				new_tasktext = new_tasktext.replace(/([⏫🔼🔽⏬])/u,(priority?priority:""))
 			} else if (priority) {
 				new_tasktext = new_tasktext + " " + priority
 			}
