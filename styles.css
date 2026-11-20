@@ -8,6 +8,7 @@
 	padding-left:5px;
 }
 
+
 .task_view_modal_date{
 	text-wrap: nowrap;
 	white-space: pre;
@@ -244,6 +245,9 @@
 	display:none;
 }
 
+div[id^='taskfinder_container_'], div[id*='taskfinder_container_']{
+	background:var(--background-primary);
+}
 
 .taskfinder_month_header
  {
