@@ -1830,10 +1830,10 @@ class TaskSuggester extends obsidian.SuggestModal {
 		function checkexcludedtags(task) {
 			return excludedtagmatch.every( ( tag ) => {
 				if ( task.file_tags ) {
-					if (task.file_tags.some((t) => t.toLowerCase().includes(tag))) { return false }
+					if (task.file_tags.some((t) => t.toLowerCase() == tag.toLowerCase())) { return false }
 				}
 				if ( task.tags ) {
-					if (task.tags.some((t) => t.toLowerCase().includes(tag))) { return false }
+					if (task.tags.some((t) => t.toLowerCase() == tag.toLowerCase())) { return false }
 				}
 				return true
 			})
@@ -1853,10 +1853,10 @@ class TaskSuggester extends obsidian.SuggestModal {
 		function checktags(task) {
 			return tagmatch.every( ( tag ) => {
 				if ( task.file_tags ) {
-					if (task.file_tags.some((t) => t.toLowerCase().includes(tag))) { return true }
+					if (task.file_tags.some((t) => t.toLowerCase() == tag.toLowerCase())) { return true }
 				}
 				if ( task.tags ) {
-					if (task.tags.some((t) => t.toLowerCase().includes(tag))) { return true }
+					if (task.tags.some((t) => t.toLowerCase() == tag.toLowerCase())) { return true }
 				}
 			})
 		}
