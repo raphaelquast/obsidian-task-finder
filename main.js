@@ -1608,8 +1608,8 @@ class TaskSuggester extends obsidian.SuggestModal {
 	// handle same-day subtasks
 	const dated_singleton_subtasks = new Set([])
 	const dated_subtasks = new Set([])
-	for (const match of this.content) {
-		// also sort subtasks by time
+
+	function do_handle_subtasks(match) {
 		match.subtasks = match.subtasks.sort(sortByTime)
 		for (const sub of match.subtasks) {
 			// if there is no parent task that has the same date as the subtask,
@@ -1623,7 +1623,14 @@ class TaskSuggester extends obsidian.SuggestModal {
 					dated_subtasks.add(sub)
 				}
 			}
-		}
+			// recursively add subtasks of subtasks
+			if (sub.subtasks) {do_handle_subtasks(sub)}
+	}
+	}
+
+	for (const match of this.content) {
+		// also sort subtasks by time
+		do_handle_subtasks(match)
 	}
 	this.content.push(...dated_singleton_subtasks.difference(dated_subtasks))
 
