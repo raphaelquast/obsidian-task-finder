@@ -214,7 +214,7 @@
 .taskfinder_tooltip {
 	padding:0;
 	margin:0;
-	background:var(--background-modifier-active-hover)
+	background:var(--background-secondary-alt);
 }
 
 .taskfinder_tooltip_prefix {
