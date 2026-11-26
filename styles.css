@@ -4,31 +4,45 @@
 }
 
 .task_finder {
-	padding-right:5px;
-	padding-left:5px;
+	margin-right:5px;
 }
 
 
 .task_view_modal_date{
-	text-wrap: nowrap;
-	white-space: pre;
-	width:max-content;
-	font-size:90%;
-	float: right;
+	text-wrap:wrap;
+	font-size:var(--font-smallest);
+	font-weight:var(--font-light);
+	text-indent: 2ch hanging;
 	filter: brightness(75%);
+	flex:1;
+	text-align:right;
+	min-width:min-content;
 }
 
-.task_view_modal_date[data-is-before="true"][data-checked="false"]{
+.tasks_of_today .task_view_modal_date[data-is-before="true"][data-checked="false"]{
 	color: var(--text-warning);
 }
+
+.tasks_of_today .task_view_modal_date[data-less-than-1-hour="true"][data-checked="false"]{
+	color: red;
+	font-weight:bold;
+}
+
+.tasks_of_today .task_finder_item:has([data-less-than-1-hour="true"][data-checked="false"]){
+	box-shadow: 0px 0px 4px red;
+	padding:5px;
+	border-radius:5px;
+}
+
+
 .task_view_modal_date:before{
 	font-size:70%;
-	content: attr(data-datesource);
+	/*content: attr(data-datesource);*/
 	margin-right:0.25em;
 }
 
 .task_suggestion_container {
-	margin-left:15px;
+	margin-left:5px;
 }
 
 .task_suggestion_task_container {
@@ -46,31 +60,27 @@
 	display:flex;
 	flex-wrap:wrap;
 	align-items: center;
-}
-
-.task_suggestion_header
- {
     position:sticky;
     top:35px;
 	background:var(--background-primary);
 	padding-left:5px;
-	padding-top:10px;
 	z-index:999;
 	border-top-left-radius:10px;
 	border-top-right-radius:10px;
 	margin-bottom:5px;
-
 	}
 
 
 .task_suggestion_header_left {
-	font-weight:bold;
+	font-size:var(--font-ui-small);
+	font-weight:var(--font-semibold);
     align-items: center;
 	width: max-content;
 	margin-right:15px;
 }
 .task_suggestion_header_right {
-	font-size:100%;
+	font-size:var(--font-ui-small);
+	font-weight:var(--font-light);
     align-items: center;
 	width: max-content;
 	margin-left:15px;
@@ -84,11 +94,11 @@
 
 .tasks_of_today {
 	border: 1px dashed var(--text-muted);
-	border-radius:5px;
-	margin-bottom:5px;
-	padding-bottom:5px;
-	margin-top:5px;
-	box-shadow: rgba(0, 0, 0, 0.07) 0px 1px 2px, rgba(0, 0, 0, 0.07) 0px 2px 4px, rgba(0, 0, 0, 0.07) 0px 4px 8px, rgba(0, 0, 0, 0.07) 0px 8px 16px, rgba(0, 0, 0, 0.07) 0px 16px 32px, rgba(0, 0, 0, 0.07) 0px 32px 64px;
+	border-radius:15px;
+	margin-left:10px;
+	margin-right:5px;
+	margin-bottom:10px;
+	box-shadow: 0px 0px 5px var(--text-muted)
 }
 
 .task_finder_today_dummy_entry {
@@ -108,7 +118,6 @@
 
 .task_finder.suggestion-item {
 	background: var(--background-primary);
-	margin-bottom:10px;
 }
 
 .task_finder.suggestion-item:hover .task_suggestion_header_center {
@@ -118,23 +127,26 @@
 
 .task_finder_item {
 	display:flex;
+	justify-content:flex-start;
 	}
 
 .task_finder_item_text_container {
 	vertical-align:middle;
-	display:inline;
-    flex: 1;
-	margin-left:20px;
+	display:inline-flex;
+	flex-wrap:wrap;
+	margin-left:10px;
 	margin-top:-2px;
-
+	text-align:left;
+	flex-direction: row;
 }
 
 .task_finder_item_text {
-	flex:1;
-	padding-left:5px;
-	display:inline;
-	vertical-align:top;
 	overflow-wrap: anywhere;
+	padding-left:5px;
+	flex:1;
+	max-width:max-content;
+	font-size:var(--font-text-size);
+	color:var(--text-muted);
 }
 
 .task_finder_item_text b, i, a:link {
@@ -149,12 +161,12 @@
 	flex-direction:row;
 	margin-top:1px;
 	margin-bottom:auto;
-	padding:1px;
+	padding:0px;
 	border-radius:4px;
 	}
 
 .task_finder_item .task_finder_tag_icon svg {
-	--icon-size:1em;
+	--icon-size:var(--font-text-size);
 }
 
 .task_finder_item .task_finder_tag_icon:hover {
@@ -162,11 +174,9 @@
 }
 
 .task_finder_item_checkbox {
-	width:15px;
-    filter:brightness(100%);
-	margin-right:20px;
+	max-height:var(--font-small);
+	max-width:var(--font-small);
 	display:flex;
-	margin-bottom:auto;
   }
 
 
@@ -239,6 +249,8 @@
 	white-space:pre;
 	overflow-wrap: anywhere;
 	text-wrap:wrap;
+	min-width:100%;
+	color:var(--text-muted);
 }
 
 .task_finder_additional_text_container:empty {
@@ -247,6 +259,7 @@
 
 div[id^='taskfinder_container_'], div[id*='taskfinder_container_']{
 	background:var(--background-primary);
+	border-radius:10px;
 }
 
 .taskfinder_month_header
@@ -255,13 +268,9 @@ div[id^='taskfinder_container_'], div[id*='taskfinder_container_']{
     top:0px;
 	background:var(--background-primary);
 	padding:5px;
-	padding-top:10px;
-	margin-top:-5px;
 	z-index:1000;
-	font-weight:bold;
-	font-size:large;
-	border-top-left-radius:10px;
-	border-top-right-radius:10px;
+	font-size:var(--font-ui-medium);
+	font-weight:var(--font-bold);
 	}
 
 .taskfinder_month_header_background{
@@ -358,16 +367,26 @@ div[id^='taskfinder_container_'], div[id*='taskfinder_container_']{
 
 /* ------------------ VIEW --------------- */
 
+.workspace-split.mod-right-split {
+	min-width:570px
+}
+
 .taskfinder_view_content{
-	overflow:hidden;
-	margin-left:10px;
 	display:flex;
 	flex-direction:column;
+	justify-content:flex-end;
+	margin-left:auto;
+	max-width:max-content;
+	margin-right:5px;
+	overflow:hidden;
+	min-height:calc(100% - 50px);
 }
 
 .taskfinder_view_container {
 	overflow:scroll;
 	min-height:calc(100% - 50px);
+	scrollbar-width: none;
+	margin-top:5px;
 }
 
 .taskfinder_view_input_container {
@@ -378,19 +397,21 @@ div[id^='taskfinder_container_'], div[id*='taskfinder_container_']{
 	flex:1;
 	margin-right:10px;
 	margin-left:10px;
-
 }
 
 .task_finder_query_dropdown_container {
     display: flex;
     align-items: center;
-	flex-grow:0;
+	flex:0;
 	}
 
 .task_finder_query_dropdown{
 	flex:0;
 }
 
+.is-mobile .task_finder_query_dropdown{
+	margin-top:5px
+}
 
 /* --------------------------------------------- Contextmenu */
 
@@ -405,18 +426,23 @@ div[id^='taskfinder_container_'], div[id*='taskfinder_container_']{
 }
 
 #priority_button {
-	padding:5px;
+	margin:2px;
 	height:30px;
 	width:30px;
 	box-shadow:none;
+	background:transparent;
 }
+#priority_button:hover {
+	background:var(--background-secondary);
+}
+
+#priority_button.active {
+	background: var(--background-primary)
+}
+
 .taskfinder_contextmenu_priority svg {
 	color:var(--text-muted)
 }
-.taskfinder_contextmenu_priority button:hover * {
-	color:var(--text-normal)
-}
-
 
 .taskfinder_contextmenu_priority_high svg {
 	transform: rotate(90deg)
@@ -427,6 +453,7 @@ div[id^='taskfinder_container_'], div[id*='taskfinder_container_']{
 .taskfinder_contextmenu_priority_lowest svg {
 	transform: rotate(-90deg)
 }
+
 
 .taskfinder_contextmenu_priority_none:hover{
 	filter: drop-shadow(0 0 4px var(--color-accent))
@@ -462,7 +489,8 @@ div[id^='taskfinder_container_'], div[id*='taskfinder_container_']{
 	max-width:270px;
 	overflow:scroll;
 	position:relative;
-	z-index:0
+	z-index:0;
+	gap:5px;
 }
 
 .is-phone .taskfinder_contextmenu_reschedule {
@@ -471,7 +499,7 @@ div[id^='taskfinder_container_'], div[id*='taskfinder_container_']{
 
 .taskfinder_contextmenu_reschedule > button {
 	box-shadow:none;
-
+	background:transparent;
 }
 
 .taskfinder_contextmenu_reschedule svg{
@@ -479,14 +507,13 @@ div[id^='taskfinder_container_'], div[id*='taskfinder_container_']{
 }
 
 .taskfinder_contextmenu_reschedule > button:hover {
-	filter: drop-shadow(0 0 4px var(--color-accent))
+	filter: drop-shadow(0 0 4px var(--color-accent));
+	background:var(--background-secondary);
+
 }
 
 .taskfinder_contextmenu_reschedule button * {
 	color:var(--text-muted);
-}
-.taskfinder_contextmenu_reschedule button:hover *{
-	color:var(--text-normal)
 }
 
 .taskfinder_contextmenu_reschedule .reschedule_container {
@@ -510,7 +537,7 @@ div[id^='taskfinder_container_'], div[id*='taskfinder_container_']{
 
 .taskfinder_taskicon_contextmenu_add .task_finder_tag_icon,
 .taskfinder_taskicon_contextmenu_remove .task_finder_tag_icon {
-	--icon-size:16px;
+	--icon-size: var(--font-text-size);
 }
 
 .taskfinder_taskicon_contextmenu_add,
@@ -519,6 +546,11 @@ div[id^='taskfinder_container_'], div[id*='taskfinder_container_']{
 	justify-content:left;
 	max-width:270px;
 	overflow:scroll;
+	align-items:center;
+}
+
+.taskfinder_add_remove_task_edit{
+	background:var(--background-secondary);
 }
 
 .is-phone .taskfinder_add_remove_task_edit,
@@ -527,8 +559,14 @@ div[id^='taskfinder_container_'], div[id*='taskfinder_container_']{
 	max-width:100%;
 }
 
+.taskfinder_taskicon_contextmenu_remove:before{
+	content: "Task tags:";
+	font-size: var(--font-smallest);
+	color:var(--text-muted);
+}
+
 .taskfinder_taskicon_contextmenu_add_button svg {
-	filter:brightness(40%)
+	filter:brightness(60%)
 }
 .taskfinder_taskicon_contextmenu_add_button:hover svg {
 	filter:none
@@ -542,10 +580,18 @@ div[id^='taskfinder_container_'], div[id*='taskfinder_container_']{
 	filter:none
 }
 
-#taskicon_edit_button {
+#taskicon_edit_button_add {
 	padding:4px;
 	box-shadow:none;
 	margin:2px;
+	background:transparent;
+}
+
+#taskicon_edit_button_remove {
+	padding:4px;
+	box-shadow:none;
+	margin:2px;
+	background:transparent;
 }
 
 /* --------------------------------------------- Delete Confirmation */
@@ -840,6 +886,27 @@ div[id^='taskfinder_container_'], div[id*='taskfinder_container_']{
 	box-shadow:none;
 	background:var(--background-primary-alt);
 	color:var(--text-faint);
+}
+
+
+.task_finder_settings_checkbox{
+	max-width:20px;
+	max-height:20px;
+}
+
+.taskfinder_setting_query_dropdown_item {
+	display:flex;
+	flex-wrap:wrap;
+	flex-direction:row;
+	flex:1;
+}
+.taskfinder_setting_query_dropdown_item .search-input-container:has(.taskfinder_setting_query_dropdown_item_name){
+	flex:1;
+	min-width:15ch;
+}
+.taskfinder_setting_query_dropdown_item .search-input-container:has(.taskfinder_setting_query_dropdown_item_query){
+	flex:3;
+	min-width:15ch;
 }
 
 /*CALLOUT*/
