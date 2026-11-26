@@ -3706,6 +3706,16 @@ class TaskFinder extends obsidian.Plugin {
 
 	}
 
+	getActiveView() {
+		const { workspace } = this.app;
+
+		let leaf = null;
+		const leaves = workspace.getLeavesOfType(VIEW_NAME);
+		if (leaves.length > 0) {
+		  return leaves[0];
+		}
+	}
+
 	async activateView() {
 		const { workspace } = this.app;
 
