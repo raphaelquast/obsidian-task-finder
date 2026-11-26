@@ -2079,6 +2079,7 @@ class TaskSuggester extends obsidian.SuggestModal {
 			event.preventDefault();
 			event.stopPropagation();
 			if (require_control_click && !event.ctrlKey) {
+				new obsidian.Notice("TaskFinder: Hold CTRL to check tasks!", 1000)
 				return
 			}
 
