@@ -3811,9 +3811,7 @@ class TaskFinderView extends obsidian.ItemView {
 
 		// connect update triggers
 		this.plugin.registerEvent(
-			app.metadataCache.on('resolved', async () => {
-				refreshTaskCache(this.plugin).then(()=>{this.reRenderSuggestions()})
-				})
+			app.metadataCache.on('resolved', async () => { await this.reRenderSuggestions() })
 		)
 
 		// periodically update view to show correct times
@@ -3821,7 +3819,7 @@ class TaskFinderView extends obsidian.ItemView {
 			this.triggerPeriodicUpdates()
 		}
 
-		refreshTaskCache(this.plugin).then(()=>{this.reRenderSuggestions()})
+		await this.reRenderSuggestions()
 
     }
 
