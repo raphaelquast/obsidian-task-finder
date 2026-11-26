@@ -3825,9 +3825,9 @@ class TaskFinderView extends obsidian.ItemView {
 
 	async reRenderSuggestions () {
 		const init_scroll_top = this.suggestionContainerEl.scrollTop
-		this.renderSuggesterQueryResult(this.suggester, this.suggestionContainerEl, this.inputEl.value?this.inputEl.value:"")
+		await this.renderSuggesterQueryResult(this.suggester, this.suggestionContainerEl, this.inputEl.value?this.inputEl.value:"")
 		// maintain scroll position as good as possible...
-		window.requestAnimationFrame(() => {		this.suggestionContainerEl.scrollTop = init_scroll_top})
+		window.requestAnimationFrame(() => { this.suggestionContainerEl.scrollTop = init_scroll_top} )
 	}
 
 	triggerPeriodicUpdates(){
