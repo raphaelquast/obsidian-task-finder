@@ -3475,6 +3475,25 @@ function scrollTodayIntoView(el, center=true) {
 	}
 }
 
+function scrollDateIntoView(suggester, el, date, center=true, offset=50) {
+	const grplabel = date?`${date.format("YYYYMMDD")}`:"Unscheduled"
+	const grpheaderid = `taskfinder_header_${grplabel}_${suggester.uuid}`
+	const grpcontainerid = `taskfinder_container_${grplabel}_${suggester.uuid}`
+
+	const daydiv = document.getElementById(grpcontainerid);
+	const daydivheader = document.getElementById(grpheaderid);
+
+	if (daydiv) {
+		if (center) {
+			offset = el.clientHeight/2
+		}
+		const topPos = daydivheader.offsetTop - daydivheader.clientHeight - offset;
+		el.scrollTop = topPos
+	}
+	return [daydiv, daydivheader]
+}
+
+
 function createQueryDropdown(plugin, el) {
 	queryDropdown = new obsidian.DropdownComponent(el)
 	queryDropdown.selectEl.className = "task_finder_query_dropdown"
