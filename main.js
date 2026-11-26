@@ -2907,10 +2907,17 @@ class TaskSuggester extends obsidian.SuggestModal {
 				} else {
 					dt.setText(`${match.start_date.format('HH:mm')}${match.end_date?'-'+match.end_date.format('HH:mm'):''}`);
 				}
+
+				const in_minutes = match.start_date.diff(moment(), "minutes")
+				if (in_minutes > -60 && in_minutes < 60) {
+					dt.setAttribute("data-less-than-1-hour", true)
+				}
+
 			} else if (usedate.isBefore()) {
 				//dt.setText("!")
 			}
 			dt.setAttribute("data-is-before", usedate.isBefore())
+
 			dt.setAttribute("data-checked", match.meta.task == "x")
 		}
 
