@@ -870,14 +870,17 @@ class SettingTab extends obsidian.PluginSettingTab {
 
 
 function sortByTime(a, b) {
-    if (a.date === null) {
+	const adate = (a.start_date?a.start_date:(a.date?.endOf("day")))
+	const bdate = (b.start_date?b.start_date:(b.date?.endOf("day")))
+
+    if (!moment.isMoment(adate)) {
 		if (a.priority || b.priority) {
 			return PRIORITY_RANKING.indexOf(a.priority) - PRIORITY_RANKING.indexOf(b.priority)
 		} else {
 			return 1;
 		}
     }
-    if (b.date === null) {
+    if (!moment.isMoment(bdate)) {
 		if (a.priority || b.priority) {
 			return PRIORITY_RANKING.indexOf(a.priority) - PRIORITY_RANKING.indexOf(b.priority)
 		} else {
@@ -885,7 +888,7 @@ function sortByTime(a, b) {
 		}
     }
 
-	if (a.date.isSame(b.date)) {
+	if (adate.isSame(bdate)) {
 		// sort same-day tasks by priority (if available)
 		if (a.priority || b.priority) {
 			return PRIORITY_RANKING.indexOf(a.priority) - PRIORITY_RANKING.indexOf(b.priority)
@@ -895,7 +898,7 @@ function sortByTime(a, b) {
 			return a.text.localeCompare(b.text)
 		}
 	} else {
-		return a.date - b.date
+		return adate - bdate
 	}
 }
 
@@ -1558,10 +1561,12 @@ class TaskSuggester extends obsidian.SuggestModal {
 				if (cutoff?recdate.isSameOrAfter(cutoff):false) { break };
 
 				const recmatch = { ...match };
+				recmatch.recurring_item = true;
 				recmatch.recurrance = {...match.recurrance};
 				recmatch.recurrance.recurr_n += i*match.recurrance.recurrance_n;
 				recmatch.date = recdate;
-				recmatch.recurring_item = true;
+
+				recmatch.start_date = (match.start_date?.clone().add(dateoffset, dateoffsetunit))
 
 				// TODO handle recurring ranged items
 				//if (match.date_range_end) {
@@ -1578,11 +1583,16 @@ class TaskSuggester extends obsidian.SuggestModal {
 			match.date_range_pos = "start"
 			// match date is the next occurance of the repeated task!
 			let idate = match.date.clone()
+			let istart_date = (match.start_date?match.start_date.clone():null)
+
 			while (true) {
 				idate = idate.add(1, "d");
+				if (istart_date) {istart_date.add(1, "d").clone()}
 
 				const rangematch = { ...match };
 				rangematch.date = idate.clone();
+				rangematch.start_date = istart_date;
+
 				rangematch.range_item = true;
 				rangematch.date_range_pos = "mid"
 				if (idate.isSameOrAfter(match.date_range_end)) {
@@ -1673,6 +1683,9 @@ class TaskSuggester extends obsidian.SuggestModal {
 
   // Returns all available suggestions.
   getSuggestions(query){
+	// TODO allow querying subtasks
+
+	// Multi-queries (e.g. queries separated with "|" )
 	if (query.contains("|")) {
 		const all_results = []
 		for (const q of query.split("|")) {
@@ -1692,15 +1705,14 @@ class TaskSuggester extends obsidian.SuggestModal {
 				out_dates.push(r[0])
 			}
 		}
-		// we need to re-sort entries to respect priorities etc.
 		for (const o of out) {
+			// ensure entries are only there once
+			o[1] = [...new Set(o[1])]
+			// we need to re-sort entries to respect priorities etc.
 			o[1] = o[1].sort(sortByTime)
 		}
-		console.log(out_dates)
 		return out
 	}
-
-	// TODO allow querying subtasks
 
 	let use_content = this.content
 
@@ -3266,20 +3278,6 @@ async function getTasks(plugin, checked='all') {
 				}
 
 
-				// use parent-task date as time-anchor if no explicit date is set
-				// (to allow setting start-end-times on sub-tasks without having to add the date again)
-				let usedate
-				if (date) {
-					usedate = date
-				} else if (task.parent_task && task.parent_task.date) {
-					usedate = task.parent_task.date
-				}
-				//const usedate = (date?date:task.parent_task.date).clone()
-				if (usedate) {
-					if (start_time){start_date = moment(`${usedate.format("YYYY-MM-DD")}T${start_time.padStart(5, '0')}`)}
-					if (end_time){end_date = moment(`${usedate.format("YYYY-MM-DD")}T${end_time.padStart(5, '0')}`)}
-				}
-
 				let recurr_n;
 				let init_date;
 
@@ -3301,10 +3299,25 @@ async function getTasks(plugin, checked='all') {
 								recurr_n += recurrance_n
 								date = date.add(recurrance_n, recurrance_unit=="dayofyear"?"days":recurrance_unit)
 							}
+
 						}
 					}
 				}
 
+				// use parent-task date as time-anchor if no explicit date is set
+				// (to allow setting start-end-times on sub-tasks without having to add the date again)
+				// Do this AFTER re-scheduling recurring tasks to ensure start-date is propagated properly as well
+				let usedate
+				if (date) {
+					usedate = date
+				} else if (task.parent_task && task.parent_task.date) {
+					usedate = task.parent_task.date
+				}
+				//const usedate = (date?date:task.parent_task.date).clone()
+				if (usedate) {
+					if (start_time){start_date = moment(`${usedate.format("YYYY-MM-DD")}T${start_time.padStart(5, '0')}`)}
+					if (end_time){end_date = moment(`${usedate.format("YYYY-MM-DD")}T${end_time.padStart(5, '0')}`)}
+				}
 
 				// parse inline-tags
 				let tags = tasktext.match(/((?:\s)?#[^\s]+(?:\s)?)/g)
