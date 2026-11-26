@@ -2365,11 +2365,21 @@ class TaskSuggester extends obsidian.SuggestModal {
 	}
 
   async openTaskEditor(event, plugin, task) {
-	event.preventDefault()
-	event.stopPropagation()
 	// only a single taskEditorModal should be open at any time
 	if (this.plugin.task_edit_modal) {
-		this.plugin.task_edit_modal.close();}
+		this.plugin.task_edit_modal.close();
+	}
+
+	// don't open editor if link is clicked (holding down ctrl)
+    if (event.ctrlKey) {
+        return;
+    }
+
+	// disable clicking links in the timeline
+	// (only allow clicking them in the editor)
+	event.preventDefault()
+	event.stopPropagation()
+
 
 	const delay = ms => new Promise(res => setTimeout(res, ms));
 
