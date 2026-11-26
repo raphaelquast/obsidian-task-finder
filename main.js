@@ -2953,7 +2953,8 @@ class TaskSuggester extends obsidian.SuggestModal {
 			if (match.start_date) {
 				dt.setAttribute("data-datesource", '⏱')//match.datesource)
 
-				if (timediff == 0){
+				// show human date string if time is less than 1 hour ago
+				if (match.start_date.diff(moment(), "minutes") > -60){
 					dt.setText(`${match.start_date.format('HH:mm')}${match.end_date?'-'+match.end_date.format('HH:mm'):''}${print_today_duration?"\n"+date_str:""}`);
 				} else {
 					dt.setText(`${match.start_date.format('HH:mm')}${match.end_date?'-'+match.end_date.format('HH:mm'):''}`);
