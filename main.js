@@ -211,10 +211,15 @@ class TagSuggest extends obsidian.AbstractInputSuggest {
 	this.inputEl = inputEl
 }
 
+	check(words) {
+		return (words && (words.at(-1).startsWith("#") || words.at(-1).startsWith("~#")))
+	}
+
 	getSuggestions(query) {
 		const words = query.split(" ")
-		if (words && words.at(-1).startsWith("#")) {
-			return this.plugin.allTags.filter((t) => t.toLowerCase().includes(words.at(-1).toLowerCase().slice(1)))
+		if (this.check(words)) {
+			const allTags = Object.keys(this.plugin.app.metadataCache.getTags())
+			return allTags.filter((t) => t.toLowerCase().includes(words.at(-1).toLowerCase().slice(1)))
 		} else { this.close() }
 	}
 
@@ -225,8 +230,9 @@ class TagSuggest extends obsidian.AbstractInputSuggest {
 	async selectSuggestion(content, evt) {
 		let query = this.inputEl.value
 		const words = query.split(" ")
-		const word = words.at(-1)
-		if (word && word.startsWith("#")) {
+		if(words.at(-1).startsWith("~")) {content = "~" + content}
+
+		if (this.check(words)) {
 			this.inputEl.value = words.slice(0, -1).join(" ") + ` ${content} `
 			this.inputEl.dispatchEvent(new Event('input', { 'bubbles': true }));
 		}
