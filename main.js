@@ -694,9 +694,45 @@ class SettingTab extends obsidian.PluginSettingTab {
 				await this.plugin.saveData(this.plugin.settings);
 				this.update();
 			},
-			items: this.plugin.settings.queryDropdownOptions.map((f) => ({
-				name: `${f[0]}: "${f[1]}"`,
-				searchable: false,
+			items: this.plugin.settings.queryDropdownOptions.map((f, idx) => ({
+				//name: `${f[0]}: "${f[1]}"`,
+				//searchable: false,
+				render: (item) => {
+					item.controlEl.className = "taskfinder_setting_query_dropdown_item"
+					item.nameEl.style.display = "none"
+					item.infoEl.style.display = "none"
+
+					item.addSearch((search) => {
+						search.inputEl.className = "taskfinder_setting_query_dropdown_item_name"
+						search.setValue(f[0])
+						search.onChange( async (value) => {
+							this.plugin.settings.queryDropdownOptions[idx][0] = value
+							await this.plugin.saveData(this.plugin.settings);
+							const leaf = this.plugin.getActiveView()
+							if (leaf) {	await leaf.rebuildView() }
+
+						})
+					})
+
+					item.addSearch((search) => {
+						search.inputEl.className = "taskfinder_setting_query_dropdown_item_query"
+						search.setValue(f[1])
+						search.onChange( async (value) => {
+							this.plugin.settings.queryDropdownOptions[idx][1] = value
+							await this.plugin.saveData(this.plugin.settings);
+							const leaf = this.plugin.getActiveView()
+							if (leaf) {	leaf.rebuildView() }
+						})
+
+						new EmptyQuerySuggest(this.plugin, search.inputEl)
+						new StatusSuggest(this.plugin, search.inputEl)
+						new TagSuggest(this.plugin, search.inputEl)
+						new QueryFolderSuggest(this.plugin, search.inputEl)
+						new DateSuggest(this.plugin, search.inputEl)
+
+					})
+
+				}
 				})),
 			},
 			]
@@ -849,14 +885,29 @@ class SettingTab extends obsidian.PluginSettingTab {
 				obsidian.setIcon(iconspan, f[1]);
 				item.nameEl.createEl("span", {text:`(${f[1]})`})
 
+				// add checkbox to color timeline
+				// TODO add description tooltip
+				const checkboxEl = item.controlEl.createEl('input', {type: 'checkbox', cls:'task_finder_settings_checkbox', attr:{checked:f[3]?f[3]:false}})
+				checkboxEl.checked = f[3]?f[3]:false
+
+				checkboxEl.addEventListener("click", async () =>{
+					f[3] = !f[3];
+					await this.plugin.saveSettings();
+					this.plugin.settingTab.update();
+					const leaf = this.plugin.getActiveView()
+					if (leaf) {	leaf.rebuildView() }
+
+
+				})
+
 				const editButtonEl = item.controlEl.createEl("button")
 				editButtonEl.id = "task_finder_tag_icon_edit_button"
 				obsidian.setIcon(editButtonEl, "lucide-square-pen")
 
 				editButtonEl.addEventListener('click', (event) => {
-						this.plugin.settings.tag_icons_tag_input.value = f[0]
-						this.plugin.settings.tag_icons_icon_input.value = f[1]
-						this.plugin.settings.iconColorPicker.setValue(f[2])
+					this.plugin.settings.tag_icons_tag_input.value = f[0]
+					this.plugin.settings.tag_icons_icon_input.value = f[1]
+					this.plugin.settings.iconColorPicker.setValue(f[2])
 
 				})
 				}
@@ -2461,15 +2512,16 @@ class TaskSuggester extends obsidian.SuggestModal {
 
 	}
 
-	setAddRemoveTagsEditor(task, el) {
+	setAddRemoveTagsEditor(task, containerEl) {
+		containerEl.className = "taskfinder_add_remove_task_edit"
 		const suggester = this
-		const containerEl = el.createEl("div", {cls:"taskfinder_add_remove_task_edit"})
+
 		const el_add = containerEl.createEl("div", {cls:"taskfinder_taskicon_contextmenu_add"})
 		const el_remove = containerEl.createEl("div", {cls:"taskfinder_taskicon_contextmenu_remove"})
 
 		function makeRemoveButton(el, tag, icon, color) {
 			const b = el.createEl("button", {cls:"taskfinder_taskicon_contextmenu_remove_button"})
-			b.id = "taskicon_edit_button"
+			b.id = "taskicon_edit_button_remove"
 			suggester.addTaskIcon(b, icon, color, tag, "remove: ")
 
 			b.addEventListener("click", (event) => {
@@ -2482,7 +2534,7 @@ class TaskSuggester extends obsidian.SuggestModal {
 
 		function makeAddButton(el, tag, icon, color) {
 			const b = el.createEl("button", {cls:"taskfinder_taskicon_contextmenu_add_button"})
-			b.id = "taskicon_edit_button"
+			b.id = "taskicon_edit_button_add"
 			suggester.addTaskIcon(b, icon, color, tag, "add: ")
 
 			b.addEventListener("click", (event) => {
@@ -3047,12 +3099,12 @@ class TaskSuggester extends obsidian.SuggestModal {
 	}
 
 	// create unique sticky headers for each day
-	const header = this.getStickyHeader(el, moment(grp), "YYYYMMDD", "", "task_suggestion_header")[0]
+	const [header, daytaskel] = this.getStickyHeader(el, moment(grp), "YYYYMMDD", "", "task_suggestion_header")
 	header.setText("")
 
-	const daydiv = header.createEl('div', {cls: 'task_suggestion_header_left', text: header_txt});
-	const daydiv1 = header.createEl('div', {cls: 'task_suggestion_header_center'});
-	const daydiv2 = header.createEl('div', {cls: 'task_suggestion_header_right', text: header_txt_right});
+	header.createEl('div', {cls: 'task_suggestion_header_left', text: header_txt});
+	header.createEl('div', {cls: 'task_suggestion_header_center'});
+	header.createEl('div', {cls: 'task_suggestion_header_right', text: header_txt_right});
 
 	// count number of range-items in the group
 	let n_range_items = 0
@@ -3070,7 +3122,7 @@ class TaskSuggester extends obsidian.SuggestModal {
 		if (match.date_range_pos == "start") {
 			range_start_items.push(match)
 		} else {
-			this.renderTask(match, el)
+			this.renderTask(match, daytaskel)
 		}
 
 	}
@@ -3080,7 +3132,7 @@ class TaskSuggester extends obsidian.SuggestModal {
 	for (let nstart = 0; nstart < range_start_items.length; nstart++) {
 		const match = range_start_items[nstart];
 		match.range_item_number[0] = (n_range_items - range_start_items.length + nstart)
-		const itemEl = this.renderTask(match, el)
+		const itemEl = this.renderTask(match, daytaskel)
 	}
 
   };
@@ -3525,12 +3577,224 @@ class TaskFinderView extends obsidian.ItemView {
 	async renderSuggesterQueryResult(suggester, el, query) {
 		refreshTaskCache(suggester.plugin).then((value) => {
 			suggester.setContent(suggester.plugin.taskCache)
+ 			const suggestions = suggester.getSuggestions(query)
 
 			el.empty();
 
-			const suggestions = suggester.getSuggestions(query)
+			this.slimViewEl.empty()
+
+			const ntot = suggestions.reduce((accumulator, currentValue) =>  accumulator + currentValue[1].length, 0)
+			const nmax = Math.min(
+				suggestions.reduce((accumulator, currentValue) =>  {if(moment.isMoment(currentValue[0]) && currentValue[1].length > accumulator){return currentValue[1].length} else {return accumulator}}, 0),
+				10 // TODO set proper treshold for task-count display
+				)
+
+			let currmonth = ""
+			let curryear = ""
+			let activeYearContainer;
+			let activeYearItems;
+
+			let activeMonthContainer;
+			let activeMonthItems;
+
+			let lastday = null
 			for (const sug of suggestions){
 				suggester.renderSuggestion(sug, el)
+
+				// CREATE TIMELINE VIEW
+
+				// only add dated items
+				if (moment.isMoment(sug[0])) {
+
+					// TODO do we want to fill all days?
+					// function fill_days(start, end) {
+						// start = start.clone().add(1, "day")
+
+						// while ((end.dayOfYear() - start.dayOfYear()) > 0) {
+							// if (curryear != start.format("YYYY")) {
+								// curryear = start.format("YYYY")
+								// activeYearContainer = this.slimViewEl.createEl("div", {cls:"taskfinder_timeline_year_container"})
+								// activeYearContainer.createEl("div", {text:start.format("YYYY"), cls:"taskfinder_timeline_year_header"})
+								// activeYearItems = activeYearContainer.createEl("div", {cls:"taskfinder_timeline_year_items"})
+							// }
+
+							// if (currmonth !=start.format("YYYYMM")) {
+								// currmonth = start.format("YYYYMM")
+								// activeMonthContainer=activeYearItems.createEl("div", {cls:"taskfinder_timeline_month_container"})
+								// activeMonthContainer.createEl("div", {text:start.format("MMM"), cls:"taskfinder_timeline_month_header"})
+
+								// activeMonthItems = activeMonthContainer.createEl("div", {cls:"taskfinder_timeline_month_items"})
+							// }
+
+							// activeMonthItems.createEl("div", {text:start.format("DD"), cls:"taskfinder_timeline_empty_entry"})
+							// start = start.add(1, "day")
+						// }
+					// }
+
+
+					if (curryear != sug[0].format("YYYY")) {
+						curryear = sug[0].format("YYYY")
+						activeYearContainer = this.slimViewEl.createEl("div", {cls:"taskfinder_timeline_year_container"})
+						activeYearContainer.createEl("div", {text:sug[0].format("YYYY"), cls:"taskfinder_timeline_year_header"})
+						activeYearItems = activeYearContainer.createEl("div", {cls:"taskfinder_timeline_year_items"})
+					}
+
+					if (currmonth !=sug[0].format("YYYYMM")) {
+						currmonth = sug[0].format("YYYYMM")
+						activeMonthContainer=activeYearItems.createEl("div", {cls:"taskfinder_timeline_month_container"})
+						activeMonthContainer.createEl("div", {text:sug[0].format("MMM"), cls:"taskfinder_timeline_month_header"})
+
+						activeMonthItems = activeMonthContainer.createEl("div", {cls:"taskfinder_timeline_month_items"})
+					}
+
+					let emptyitem
+					if (lastday) {
+						if (sug[0].date() != 1 && (sug[0].dayOfYear() - lastday.dayOfYear()) != 1) {
+							emptyitem = activeMonthItems.createEl("div", {text:"⋮", cls:"taskfinder_timeline_empty_item"})
+						}
+					} else if (sug[0].date() != 0) {
+						emptyitem = activeMonthItems.createEl("div", {text:"⋮", cls:"taskfinder_timeline_empty_item"})
+					}
+
+
+
+
+
+
+
+
+
+
+
+
+					lastday = sug[0]
+
+
+					const itemcontainer = activeMonthItems.createEl("div", {cls:"taskfinder_timeline_item_container"})
+					const txt = itemcontainer.createEl("div", {text:sug[0].format("DD"), cls:"taskfinder_timeline_item_text"})
+
+					const nchecked = sug[1].reduce((a, v) => {if(v["task_status"] == "x") {return a + 1} else {return a}}, 0)
+					const nunchecked = sug[1].reduce((a, v) => {if(v["task_status"] != "x") {return a + 1} else {return a}}, 0)
+
+					const item = itemcontainer.createEl("div", {cls:"taskfinder_timeline_item_progress_container"})
+					const item1 = item.createEl("div", {cls:"taskfinder_timeline_item_progress_unchecked"})
+					const x1 = `${nunchecked/nmax*100}%`
+					const x2 = `${nchecked/nmax*100}%`
+
+					item1.style["min-width"] = x1
+
+					// indicate more tasks than display-treshold with brighter color
+					if (sug[1].length <= nmax) {
+						item1.style.background = "var(--text-faint)"
+					} else {
+						item1.style.background = "var(--text-normal)"
+					}
+
+					const item2 = item.createEl("div", {cls:"taskfinder_timeline_item_progress_checked"})
+					item2.style["min-width"] = x2
+					item2.style.background = "green"
+
+					// style today
+					if (moment().isSame(sug[0], "day")) {
+						itemcontainer.style["box-shadow"] = "0px 0px 2px var(--text-normal)"
+						txt.style["color"] = "var(--text-normal)"
+						item1.style["background"] = "var(--text-normal)"
+						item2.style["background"] = "green"
+
+					} else {
+						txt.style["color"] = "var(--text-muted)"
+					}
+
+					// color dates based on tags
+					// TODO add info about this!
+					let color = null
+					let color_idx = Infinity
+					for (const task of sug[1]) {
+						if (task.tags || task.file_tags) {
+							for (const t of Array.prototype.concat(task.tags?task.tags:[], task.file_tags?task.file_tags:[])) {
+								const idx = this.plugin.settings.tagIcons.findIndex(i=>i[3] && t.startsWith(i[0]))
+								if (idx > -1) {
+									color_idx = Math.min(color_idx, idx)
+								}
+								if (color_idx == 0) {break}
+							}
+						}
+					}
+
+					if (color_idx < Infinity) {
+						txt.style["color"] = this.plugin.settings.tagIcons[color_idx][2]
+					}
+
+					//add outline in case a ranged task is found on the day
+					let shadows = []
+					for (const ss of sug[1].filter((t)=>t.date_range_end?true:false)) {
+						shadows.push(`-${ss.range_item_number[0]*4+1}px 0 0 0 var(${RANGE_COLOR_CYCLE[ss.range_item_number[0]]})`)
+					}
+					const linediv = document.createElement("div")
+					linediv.style["height"] = `${txt.offsetHeight}px`
+					linediv.style["width"] = "1px"
+					linediv.style["box-shadow"] = shadows.join(",")
+					txt.before(linediv)
+
+					let daydiv
+					let daydivheader
+
+					itemcontainer.addEventListener("click", (event) => {
+						[daydiv, daydivheader] = scrollDateIntoView(suggester, el, sug[0], false, 200)
+						for (const d of [daydiv, daydivheader, daydiv.parentNode]) {
+							d.style["background"] = "var(--interactive-normal)"
+						}
+					})
+					itemcontainer.addEventListener("contextmenu", (event) => {
+						showToolTip(event, true)
+					})
+
+					function showToolTip(event, force=false) {
+						if (force || event.altKey || event.buttons == 2) {
+							const tagtooltip = new DocumentFragment()
+							const container = tagtooltip.createEl('div', {cls:"taskfinder_timeline_tooltip_container"})
+							const s = new TaskSuggester(suggester.plugin)
+							s.renderSuggestion(sug, container)
+							obsidian.displayTooltip(item, tagtooltip, {placement:"right", classes:["taskfinder_tooltip"]})
+						}
+					}
+
+					itemcontainer.addEventListener("mouseenter", (event) => {
+						itemcontainer.style["outline"] = "1px solid var(--text-normal)"
+						// show tooltip on alt-press if mouse is over item
+						window.addEventListener("keydown", showToolTip)
+
+						if (event.ctrlKey || event.buttons == 1){
+							[daydiv, daydivheader] = scrollDateIntoView(suggester, el, sug[0], false, 200)
+						}
+						if (daydiv) {
+							for (const d of [daydiv, daydivheader, daydiv.parentNode]) {
+								d.style["background"] = "var(--interactive-normal)"
+							}
+						}
+
+						showToolTip(event)
+						})
+
+					itemcontainer.addEventListener("mouseleave", (event) => {
+						itemcontainer.style["outline"] = "none"
+						window.removeEventListener("keydown", showToolTip)
+
+						if (daydiv) {
+							for (const d of [daydiv, daydivheader, daydiv.parentNode]) {
+								d.style["background"] = "initial"
+							}
+						}
+
+						for (const tt of document.getElementsByClassName("taskfinder_tooltip")){tt.remove()}
+						})
+
+				}
+
+
+
+
+
 			};
 
 		})
@@ -3542,7 +3806,14 @@ class TaskFinderView extends obsidian.ItemView {
 		this.contentEl.empty()
 		this.contentEl.className = "taskfinder_view_content"
 
-		this.inputContainerEl = this.contentEl.createEl("div", {cls:"taskfinder_view_input_container"})
+		this.contentEl.style.display="flex"
+		this.contentEl.style["flex-direction"]="row"
+
+		this.slimViewEl = this.contentEl.createEl("div", {cls:"taskfinder_timeline"})
+		this.fullViewEl = this.contentEl.createEl("div", {cls:"taskfinder_tasks"})
+
+
+		this.inputContainerEl = this.fullViewEl.createEl("div", {cls:"taskfinder_view_input_container"})
 
 		this.queryDropdown = createQueryDropdown(this.plugin, this.inputContainerEl)
 		this.queryDropdown.onChange((value) => {
@@ -3572,7 +3843,7 @@ class TaskFinderView extends obsidian.ItemView {
 		new DateSuggest(this.plugin, this.inputEl)
 
 
-		this.suggestionContainerEl = this.contentEl.createEl("div", {cls:"taskfinder_view_container"});
+		this.suggestionContainerEl = this.fullViewEl.createEl("div", {cls:"taskfinder_view_container"});
 
 		this.inputEl.addEventListener('input', async (event) => {
 			const promise = this.reRenderSuggestions()

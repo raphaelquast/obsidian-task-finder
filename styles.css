@@ -978,3 +978,154 @@ details[open]::details-content {
 	.question-mark-glyph {color:var(--mono-0); fill:var(--color-green);};
 }
 */
+
+
+
+/*--------------------------- TIMELINE --------------------------- */
+
+
+.taskfinder_tasks{
+	display: flex;
+	flex-direction: column;
+	margin-left:5px;
+	min-width:500px;
+	max-width:500px;
+	}
+
+
+.is-mobile .taskfinder_tasks {
+	min-width:calc(100% - 55px);
+	max-width:calc(100% - 55px);
+}
+
+.taskfinder_timeline{
+	display:inline-flex;
+	flex-wrap:wrap;
+	overflow:scroll;
+	scrollbar-width: none;
+	padding-bottom:50px;
+	border-top-left-radius: 15px;
+	border-bottom-left-radius: 15px;
+	flex: 1;
+}
+
+.taskfinder_timeline::-webkit-scrollbar {
+    display: none;
+}
+
+.is-mobile .taskfinder_timeline {
+	flex: 1;
+}
+
+.taskfinder_timeline_year_container{
+	display: flex;
+	flex-direction: column;
+	background: var(--background-primary);
+	margin-top: 5px;
+	margin-bottom: 5px;
+	align-items: center;
+	font-weight: bold;
+	border-top-left-radius: 15px;
+	border-bottom-left-radius: 15px;
+	margin-left:5px;
+
+}
+
+.taskfinder_timeline_year_header{
+	padding-left: 4px;
+	padding-top: 10px;
+}
+
+.taskfinder_timeline_year_items {
+	display: flex;
+	flex-direction: column;
+}
+
+.taskfinder_timeline_year_items .taskfinder_timeline_month_container:not(:last-child) {
+	border-bottom: 1px solid var(--text-faint);
+	border-image: linear-gradient(to right, transparent 5%, var(--text-faint) 50%, transparent 95%) 1;
+}
+
+.taskfinder_timeline_month_container{
+	display: flex;
+	flex-direction: row;
+	margin-top: 5px;
+	padding-bottom: 5px;
+	align-items: start;
+	font-weight: normal;
+}
+.is-mobile .taskfinder_timeline_month_container {
+	flex-direction: column;
+}
+.is-mobile .taskfinder_timeline_month_header {
+	writing-mode: horizontal-tb;
+}
+
+.taskfinder_timeline_month_header{
+	writing-mode: sideways-lr;
+}
+
+
+.taskfinder_timeline_month_items{
+	display:flex;
+	flex-direction:column;
+}
+
+.taskfinder_timeline_empty_item{
+	width: 100%;
+	text-align: center;
+	color: var(--text-faint);
+	font-size: x-small;
+
+}
+.taskfinder_timeline_empty_entry{
+	width: 100%;
+	text-align: center;
+	padding-right:15px;
+	color: var(--text-faint);
+	font-size: xx-small;
+
+}
+
+.taskfinder_timeline_item_container{
+	display: flex;
+	justify-content: space between;
+	align-items: center;
+	padding-right: 5px;
+	margin-right: 2px;
+	padding-left: 5px;
+	border-radius: 5px;
+}
+
+.taskfinder_timeline_item_text{
+	font-size:10px;
+	font-weight:var(--font-light);
+	min-width: 15px;
+	min-height: max-content;
+	padding-left: 2px;
+}
+
+.taskfinder_timeline_item_progress_container{
+	width: 15px;
+	display: flex;
+	flex-direction: row;
+}
+
+.taskfinder_timeline_item_progress_unchecked,
+.taskfinder_timeline_item_progress_checked{
+	min-height: calc(1ch - 2px);
+	margin-bottom:2px
+}
+
+.taskfinder_timeline_tooltip_container{
+	background: var(--background-primary);
+	border: 1px solid var(--text-muted);
+	border-radius: 10px;
+	padding: 10px;
+	pointer-events: auto;
+	min-width:max-content
+}
+
+.taskfinder_tooltipx{
+	pointer-events: auto;
+}
