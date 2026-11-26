@@ -1749,7 +1749,6 @@ class TaskSuggester extends obsidian.SuggestModal {
 		for (const r of all_results) {
 			const idx = out_dates.findIndex((d)=>{if (moment.isMoment(d)) {return d.isSame(r[0])} else {return d == r[0]}})
 			if (idx > -1) {
-				console.log(out, idx)
 				out[idx][1].push(...r[1])
 			} else {
 				out.push(r)
@@ -3578,7 +3577,6 @@ class TaskFinderView extends obsidian.ItemView {
 		refreshTaskCache(suggester.plugin).then((value) => {
 			suggester.setContent(suggester.plugin.taskCache)
  			const suggestions = suggester.getSuggestions(query)
-
 			el.empty();
 
 			this.slimViewEl.empty()
@@ -3602,35 +3600,8 @@ class TaskFinderView extends obsidian.ItemView {
 				suggester.renderSuggestion(sug, el)
 
 				// CREATE TIMELINE VIEW
-
 				// only add dated items
 				if (moment.isMoment(sug[0])) {
-
-					// TODO do we want to fill all days?
-					// function fill_days(start, end) {
-						// start = start.clone().add(1, "day")
-
-						// while ((end.dayOfYear() - start.dayOfYear()) > 0) {
-							// if (curryear != start.format("YYYY")) {
-								// curryear = start.format("YYYY")
-								// activeYearContainer = this.slimViewEl.createEl("div", {cls:"taskfinder_timeline_year_container"})
-								// activeYearContainer.createEl("div", {text:start.format("YYYY"), cls:"taskfinder_timeline_year_header"})
-								// activeYearItems = activeYearContainer.createEl("div", {cls:"taskfinder_timeline_year_items"})
-							// }
-
-							// if (currmonth !=start.format("YYYYMM")) {
-								// currmonth = start.format("YYYYMM")
-								// activeMonthContainer=activeYearItems.createEl("div", {cls:"taskfinder_timeline_month_container"})
-								// activeMonthContainer.createEl("div", {text:start.format("MMM"), cls:"taskfinder_timeline_month_header"})
-
-								// activeMonthItems = activeMonthContainer.createEl("div", {cls:"taskfinder_timeline_month_items"})
-							// }
-
-							// activeMonthItems.createEl("div", {text:start.format("DD"), cls:"taskfinder_timeline_empty_entry"})
-							// start = start.add(1, "day")
-						// }
-					// }
-
 
 					if (curryear != sug[0].format("YYYY")) {
 						curryear = sug[0].format("YYYY")
@@ -3655,17 +3626,6 @@ class TaskFinderView extends obsidian.ItemView {
 					} else if (sug[0].date() != 0) {
 						emptyitem = activeMonthItems.createEl("div", {text:"⋮", cls:"taskfinder_timeline_empty_item"})
 					}
-
-
-
-
-
-
-
-
-
-
-
 
 					lastday = sug[0]
 
@@ -3790,10 +3750,6 @@ class TaskFinderView extends obsidian.ItemView {
 						})
 
 				}
-
-
-
-
 
 			};
 
