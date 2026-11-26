@@ -2412,17 +2412,20 @@ class TaskSuggester extends obsidian.SuggestModal {
 	let tasktext = text
 	// handle internal links
 	const internal_link_iterator = tasktext.matchAll(/\[\[([^|]+)(?:\|([^|]+))?\]\]/g)
-	let imatch, ilink, iname;
+	let imatch, ilink, iname, ifile;
 	for ([imatch, ilink, iname] of internal_link_iterator) {
-		const ipath = this.plugin.app.vault.getAbstractFileByPath(ilink + ".md")
-		if (ipath) {
-			tasktext = tasktext.replace(`${imatch}`, `<a href="obsidian://open?vault=${this.plugin.app.vault.getName()}&file=${encodeURI(ipath.path)}">${iname?iname:ilink}</a>`)
+		try {
+			ifile = this.plugin.app.metadataCache.getFirstLinkpathDest(ilink)
+		} catch {
+			ifile = null
+		}
+		if (ifile) {
+			const url = this.plugin.app.getObsidianUrl(ifile)
+			tasktext = tasktext.replace(`${imatch}`, `<a href="${url}">${iname?iname:ilink}</a>`)
 		} else {
 			tasktext = tasktext.replace(`${imatch}`, `<a>${iname?iname:ilink}</a>`)
-
 		}
 	}
-
 
 	// handle external links
 	tasktext = tasktext.replace(/(\[(.*?)\]\((.*?)\))/g, "<a href=$3>$2</a>")
