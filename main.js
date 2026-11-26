@@ -2661,9 +2661,7 @@ class TaskSuggester extends obsidian.SuggestModal {
 		}
 
 		// prevent default click actions from propagating
-		el.addEventListener('click', (event) => {
-			event.stopPropagation()
-			});
+		el.addEventListener('click', (event) => { event.stopPropagation()});
 
 		const taskdiv = taskContainerEl.createEl('div', {cls:'task_suggestion_task_container'});
 		const txtdiv = taskdiv.createEl('div', {cls:'task_finder_item'});
